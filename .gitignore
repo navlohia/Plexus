@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+node_modules/
+dist/
+.vite/
+.playwright-mcp/
+tmp/
+*.log
+
+.env
+.env.*
+!.env.example

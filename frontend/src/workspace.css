@@ -1,0 +1,2798 @@
+/* ═══════════════════════════════════════════════════════════════════
+   PULSELINK WORKSPACE PRODUCTION STYLESHEET (src/workspace.css)
+   FULL-BLEED 100vw ARCHITECTURE · 3 TABS ONLY · STRICT LIGHT MODE
+   1. Live Disruption TV | 2. Clinical Dashboard (+ Dispatch) | 3. Stress Lab
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── 0. FONT & BASE RESETS ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --font-main: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+  /* Mediso Light Color Palette */
+  --mediso-bg: #F7F8FA;
+  --mediso-surface: #FFFFFF;
+  --mediso-border: #ECEEF2;
+  --mediso-border-subtle: #F1F3F5;
+  --mediso-emerald: #15997A;
+  --mediso-emerald-light: #EAF8F4;
+  --mediso-emerald-soft: #F0FDF9;
+  --mediso-amber: #F59E0B;
+  --mediso-amber-light: #FEF3C7;
+  --mediso-coral: #F87171;
+  --mediso-crimson: #E11D48;
+  --mediso-coral-light: #FEE2E2;
+
+  --ink-primary: #111827;
+  --ink-secondary: #374151;
+  --ink-muted: #6B7280;
+  --ink-subtle: #9CA3AF;
+}
+
+/* ── 1. FULL-BLEED 100vw SHELL (No Left Sidebar!) ── */
+.ws-fullbleed-root {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--mediso-bg);
+  font-family: var(--font-main);
+  color: var(--ink-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── STEP 1: ULTRA-CLEAN TOP BAR (60px) WITH ONLY 3 TABS ── */
+.ws-topbar-clean {
+  height: 60px;
+  min-height: 60px;
+  background: var(--mediso-surface);
+  border-bottom: 1px solid var(--mediso-border);
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  z-index: 30;
+}
+
+.ws-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ws-back-story-btn {
+  background: #F7F8FA;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ws-back-story-btn:hover {
+  background: #EEF2F6;
+  border-color: #D1D5DB;
+  color: var(--ink-primary);
+}
+
+.ws-brand-divider {
+  width: 1px;
+  height: 22px;
+  background: #E5E7EB;
+}
+
+.ws-topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.ws-topbar-brand-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--mediso-emerald);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(21, 153, 122, 0.28);
+}
+
+.ws-topbar-brand-name {
+  font-size: 17.5px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  letter-spacing: -0.02em;
+}
+
+/* Center: Clean 3-Tab Pill Switcher */
+.ws-tab-switcher {
+  background: #F3F4F6;
+  padding: 4px;
+  border-radius: 12px;
+  display: flex;
+  gap: 4px;
+}
+
+.ws-tab-pill {
+  border: none;
+  background: transparent;
+  color: #4B5563;
+  padding: 7px 18px;
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.ws-tab-pill:hover {
+  color: var(--ink-primary);
+}
+
+.ws-tab-pill.active {
+  background: #FFFFFF;
+  color: var(--mediso-emerald);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Right: +6h Solver Rebalance Button Only */
+.ws-topbar-right {
+  display: flex;
+  align-items: center;
+}
+
+.ws-topbar-rebalance-btn {
+  background: var(--mediso-emerald);
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(21, 153, 122, 0.25);
+  white-space: nowrap;
+}
+
+.ws-topbar-rebalance-btn:hover {
+  background: #118267;
+}
+
+/* Main Viewport Stage */
+.ws-fullbleed-stage {
+  flex: 1;
+  width: 100vw;
+  height: calc(100vh - 60px);
+  overflow-y: auto;
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   STEP 2: TAB 1 — FLIGHTY TV AIRPORT DISRUPTION MAP (FULL 100vw)
+   ═══════════════════════════════════════════════════════════════════ */
+.flighty-tv-outer-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 20px 18px;
+  height: calc(100vh - 60px);
+  box-sizing: border-box;
+  overflow: hidden;
+  background: var(--mediso-bg);
+}
+
+/* ── Docked Top Black Banner (Placed outside the clipped map frame so 0 lines poke above) ── */
+.flighty-docked-banner {
+  height: 56px;
+  min-height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(90deg, #121316 0%, #23272F 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  color: #FFFFFF;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  z-index: 20;
+}
+
+.flighty-banner-title {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #FFFFFF;
+  white-space: nowrap;
+}
+
+.flighty-banner-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: nowrap;
+}
+
+.flighty-filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.flighty-pill-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #E5E7EB;
+  height: 32px;
+  padding: 0 13px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.flighty-pill-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #FFFFFF;
+}
+
+.flighty-pill-btn.pill-active {
+  background: #FFFFFF;
+  color: #111827;
+  border-color: #FFFFFF;
+}
+
+.flighty-brand-text {
+  font-size: 13.5px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.brand-primary {
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.brand-sep {
+  color: #6B7280;
+}
+
+.brand-mesh {
+  font-weight: 500;
+  color: #9CA3AF;
+}
+
+.flighty-tilted-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #111317;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  transform: rotate(8deg);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.flighty-tilted-badge:hover {
+  transform: rotate(0deg) scale(1.06);
+}
+
+/* ── Clipped Map Frame: Guarantees Deck.gl route lines NEVER poke above the banner! ── */
+.flighty-clipped-map-frame {
+  flex: 1;
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  background: #E5E7EB;
+}
+
+.flighty-map-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* White Fog Scrim */
+.flighty-white-fog-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: linear-gradient(90deg,
+      #F8F9FA 0%,
+      #F8F9FA 20%,
+      rgba(248, 249, 250, 0.92) 28%,
+      rgba(248, 249, 250, 0.4) 38%,
+      rgba(248, 249, 250, 0) 50%);
+}
+
+/* Left Stack of Light-Gray Flighty Cards */
+.flighty-left-cards-stack {
+  position: absolute;
+  top: 16px;
+  left: 18px;
+  bottom: 16px;
+  width: 320px;
+  z-index: 40;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 6px;
+}
+
+.flighty-left-cards-stack::-webkit-scrollbar {
+  width: 5px;
+}
+
+.flighty-left-cards-stack::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+}
+
+.flighty-card {
+  background: #EFEFEF;
+  border-radius: 14px;
+  padding: 12px 16px;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 12px;
+  align-items: start;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.flighty-card:hover {
+  background: #E8EAEF;
+}
+
+.flighty-card.flighty-card-selected {
+  background: #FFFFFF;
+  box-shadow: 0 0 0 2px #111827, 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.flighty-card-code {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #6B7280;
+  letter-spacing: 0.02em;
+  padding-top: 2px;
+  font-family: var(--font-mono);
+}
+
+.flighty-card-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.flighty-card-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  line-height: 1.2;
+}
+
+.flighty-card-stats-row {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.flighty-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.flighty-stat-circle {
+  width: 17px;
+  height: 17px;
+  border-radius: 999px;
+  background: #9CA3AF;
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flighty-stat-val {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.flighty-progress-track {
+  margin-top: 7px;
+  width: 100%;
+  height: 3.5px;
+  background: #D8DCE3;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.flighty-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+/* ── Interactive Map Marker Buttons (Guaranteed 1-Click Hit Target) ── */
+.flighty-pin-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  pointer-events: auto;
+  min-width: 48px;
+  min-height: 44px;
+  padding: 4px;
+  z-index: 10;
+  transition: transform 0.15s ease;
+}
+
+.flighty-pin-btn:hover,
+.flighty-pin-btn.pin-active {
+  transform: scale(1.18);
+}
+
+.flighty-pin-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2.5px solid #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+.flighty-pin-pill {
+  margin-top: 4px;
+  background: #FFFFFF;
+  color: #1F2937;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FLIGHTY AIRPORT TERMINAL PASS DRAWER (DESIGN.md Section 1C)
+   ═══════════════════════════════════════════════════════════════════ */
+.flighty-terminal-pass {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  width: 390px;
+  max-height: calc(100% - 36px);
+  background: #FFFFFF;
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18), 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--mediso-border);
+  z-index: 45;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal-pass-header {
+  background: #111317;
+  color: #FFFFFF;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top-left-radius: 17px;
+  border-top-right-radius: 17px;
+}
+
+.terminal-pass-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.terminal-pass-code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.16);
+  color: #FFFFFF;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+}
+
+.terminal-pass-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.2;
+}
+
+.terminal-pass-close {
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #D1D5DB;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.terminal-pass-close:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+}
+
+.terminal-telemetry-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: #F8F9FA;
+  border-bottom: 1px solid var(--mediso-border);
+  padding: 10px 14px;
+  gap: 8px;
+}
+
+.terminal-telemetry-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.telemetry-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.telemetry-val {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  margin-top: 2px;
+}
+
+.terminal-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 12px 18px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.terminal-abo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 6px 18px 12px;
+}
+
+.terminal-abo-card {
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 9px;
+  padding: 7px 6px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.terminal-abo-card.card-alert-red {
+  border-color: #FECACA;
+  background: #FEF2F2;
+}
+
+.terminal-abo-card.card-alert-red .abo-tag {
+  color: #DC2626;
+}
+
+.terminal-abo-card.card-alert-red .abo-qty {
+  color: #B91C1C;
+}
+
+.terminal-abo-card.card-optimal-green {
+  border-color: #A7F3D0;
+  background: #F0FDF4;
+}
+
+.terminal-abo-card.card-optimal-green .abo-tag {
+  color: #059669;
+}
+
+.terminal-abo-card.card-optimal-green .abo-qty {
+  color: #047857;
+}
+
+.abo-tag {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--ink-primary);
+  font-family: var(--font-mono);
+}
+
+.abo-qty {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink-primary);
+  margin: 2px 0 5px;
+}
+
+.abo-stock-bar {
+  width: 100%;
+  height: 3px;
+  background: #E5E7EB;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.abo-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.terminal-courier-feed {
+  padding: 0 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.courier-feed-row {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+}
+
+.courier-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--mediso-emerald);
+  margin-right: 6px;
+  display: inline-block;
+}
+
+.courier-callsign {
+  font-weight: 700;
+  color: var(--ink-primary);
+  font-family: var(--font-mono);
+}
+
+.courier-cargo {
+  color: var(--ink-secondary);
+  font-weight: 600;
+}
+
+.courier-eta {
+  color: #D97706;
+  font-weight: 600;
+}
+
+.terminal-dispatch-btn {
+  margin: 0 18px 16px;
+  height: 38px;
+  background: var(--mediso-emerald);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(21, 153, 122, 0.25);
+}
+
+.terminal-dispatch-btn:hover {
+  background: #118267;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   STEP 3 & 4: TAB 2 — MEDISO CLINICAL DASHBOARD (+ DISPATCH)
+   ═══════════════════════════════════════════════════════════════════ */
+.mediso-stage {
+  padding: 24px 28px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 1560px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Sub-Header Row */
+.mediso-subbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mediso-date-pill {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.mediso-date-icon {
+  color: var(--mediso-emerald);
+}
+
+/* 2-Way Segmented Sub-View Switcher */
+.mediso-subview-switcher {
+  display: inline-flex;
+  align-items: center;
+  background: #EEF2F6;
+  padding: 3px;
+  border-radius: 11px;
+  gap: 4px;
+}
+
+.subview-btn {
+  border: none;
+  background: transparent;
+  color: #4B5563;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.subview-btn:hover {
+  color: var(--ink-primary);
+}
+
+.subview-btn.active {
+  background: #FFFFFF;
+  color: var(--mediso-emerald);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.mediso-subbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mediso-btn-outline {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.mediso-btn-outline:hover {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+}
+
+.mediso-btn-primary {
+  background: var(--mediso-emerald);
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(21, 153, 122, 0.25);
+}
+
+.mediso-btn-primary:hover {
+  background: #118267;
+}
+
+/* 3 Signature Mediso Top Cards */
+.mediso-row-3cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.mediso-card {
+  background: var(--mediso-surface);
+  border: 1px solid var(--mediso-border);
+  border-radius: 16px;
+  padding: 20px;
+  box-sizing: border-box;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+}
+
+.mediso-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mediso-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mediso-icon-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--mediso-emerald-light);
+  color: var(--mediso-emerald);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mediso-card-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink-primary);
+  margin: 0;
+}
+
+.mediso-card-more {
+  border: none;
+  background: transparent;
+  color: var(--ink-subtle);
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* Card 1: Regional Stock Insights */
+.mediso-donut-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.mediso-donut-wrap {
+  width: 92px;
+  height: 92px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.mediso-donut-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.mediso-donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.mediso-donut-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  line-height: 1.1;
+}
+
+.mediso-donut-sub {
+  font-size: 9px;
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+/* Enforce gap: 12px and white-space: nowrap to avoid collisions! */
+.mediso-donut-legend {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  font-size: 12px;
+}
+
+.mediso-legend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.mediso-legend-left {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink-secondary);
+  font-weight: 500;
+}
+
+.mediso-legend-val {
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.mediso-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.dot-emerald {
+  background: var(--mediso-emerald);
+}
+
+.dot-amber {
+  background: var(--mediso-amber);
+}
+
+.dot-coral {
+  background: var(--mediso-coral);
+}
+
+/* Card 2: Units Rescued (<36h FEFO) */
+.mediso-metric-row {
+  margin-top: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.mediso-giant-num {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  line-height: 1;
+}
+
+.mediso-trend-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--mediso-emerald);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.mediso-hprogress-track {
+  margin: 14px 0 12px;
+  display: flex;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  gap: 3px;
+  background: transparent;
+}
+
+.mediso-hbar-seg {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.seg-emerald {
+  background: var(--mediso-emerald);
+}
+
+.seg-amber {
+  background: var(--mediso-amber);
+}
+
+.seg-coral {
+  background: var(--mediso-coral);
+}
+
+.mediso-hprogress-legend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.mediso-hprog-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Card 3: Lateral Transfers Executed (Split with Barcode) */
+.mediso-split-columns {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.mediso-split-col {
+  border-left: 2px dashed #D1D5DB;
+  padding-left: 12px;
+}
+
+.mediso-split-label {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+.mediso-split-val-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.mediso-split-num {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.mediso-split-pct {
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+}
+
+.pct-up {
+  color: var(--mediso-emerald);
+}
+
+.pct-down {
+  color: var(--mediso-amber);
+}
+
+.mediso-split-sub {
+  font-size: 10.5px;
+  color: var(--ink-subtle);
+  margin-top: 2px;
+}
+
+.mediso-solid-bar {
+  margin-top: 10px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--mediso-emerald);
+  width: 100%;
+}
+
+.mediso-barcode-bar {
+  margin-top: 10px;
+  height: 14px;
+  border-radius: 3px;
+  width: 100%;
+  background: repeating-linear-gradient(90deg,
+      var(--mediso-emerald) 0px,
+      var(--mediso-emerald) 2px,
+      transparent 2px,
+      transparent 5px);
+}
+
+/* Row 2: Spline Chart + Donut */
+.mediso-row-charts {
+  display: grid;
+  grid-template-columns: 1.85fr 1fr;
+  gap: 18px;
+}
+
+.mediso-spline-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.mediso-date-pill-sm {
+  background: #F7F8FA;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mediso-spline-wrapper {
+  margin-top: 12px;
+  position: relative;
+  width: 100%;
+  height: 220px;
+}
+
+.mediso-spline-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.mediso-axis-text {
+  font-size: 9.5px;
+  font-weight: 500;
+  fill: #94A3B8;
+  font-family: var(--font-main);
+}
+
+.mediso-floating-tooltip {
+  position: absolute;
+  top: 36px;
+  left: calc(52% - 85px);
+  width: 175px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.mediso-tt-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  margin-bottom: 5px;
+  border-bottom: 1px solid #F1F5F9;
+  padding-bottom: 4px;
+}
+
+.mediso-tt-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  margin-top: 3px;
+}
+
+.mediso-tt-lbl {
+  color: var(--ink-muted);
+}
+
+.mediso-tt-val {
+  font-weight: 700;
+}
+
+.val-green {
+  color: var(--mediso-emerald);
+}
+
+.val-amber {
+  color: var(--mediso-amber);
+}
+
+.val-red {
+  color: var(--mediso-crimson);
+}
+
+/* Solver Efficiency Donut Card */
+.mediso-donut-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.mediso-btn-pill-outline {
+  border: 1px solid #E5E7EB;
+  border-radius: 999px;
+  background: #FFFFFF;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mediso-btn-pill-outline:hover {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+}
+
+.mediso-gauge-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding-top: 10px;
+}
+
+.mediso-gauge-wrap {
+  width: 165px;
+  height: 165px;
+  position: relative;
+}
+
+.mediso-gauge-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.mediso-gauge-pill {
+  position: absolute;
+  background: #FFFFFF;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  border: 1px solid #F1F5F9;
+}
+
+.pill-emerald {
+  color: var(--mediso-emerald);
+}
+
+.pill-amber {
+  color: var(--mediso-amber);
+}
+
+.pill-coral {
+  color: var(--mediso-coral);
+}
+
+.mediso-gauge-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.mediso-gauge-pct {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  line-height: 1.1;
+}
+
+.mediso-gauge-lbl {
+  font-size: 10.5px;
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+.mediso-gauge-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 18px;
+  width: 100%;
+}
+
+.mediso-glegend-col {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mediso-glegend-text {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   STEP 3: THE EMBEDDED DE-CLUTTERED DISPATCH CENTER
+   ═══════════════════════════════════════════════════════════════════ */
+.mediso-dispatch-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dispatch-embed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dispatch-live-badge {
+  background: #EAF8F4;
+  color: var(--mediso-emerald);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(21, 153, 122, 0.2);
+}
+
+.dispatch-filter-pills {
+  display: flex;
+  border: 1px solid #E5E7EB;
+  border-radius: 9px;
+  overflow: hidden;
+  background: #F7F8FA;
+}
+
+.dispatch-fpill {
+  border: none;
+  background: transparent;
+  padding: 0 11px;
+  height: 32px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.dispatch-fpill.active {
+  background: #FFFFFF;
+  color: var(--ink-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.dispatch-auth-all-btn {
+  background: var(--mediso-emerald);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  padding: 0 14px;
+  height: 32px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.dispatch-auth-all-btn:hover {
+  background: #118267;
+}
+
+/* 1-Line Quick Dispatch Bar */
+.dispatch-quick-bar {
+  background: #F7F8FA;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  box-sizing: border-box;
+}
+
+.quick-left-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.quick-right-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.quick-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quick-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.quick-select {
+  height: 32px;
+  border-radius: 7px;
+  border: 1px solid #D1D5DB;
+  background: #FFFFFF;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-primary);
+  font-family: var(--font-main);
+  outline: none;
+  cursor: pointer;
+}
+
+.quick-pills-row {
+  display: flex;
+  gap: 4px;
+}
+
+.quick-bg-pill {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.quick-bg-pill:hover {
+  border-color: #9CA3AF;
+}
+
+.quick-bg-pill.active {
+  background: var(--mediso-emerald);
+  color: #FFFFFF;
+  border-color: var(--mediso-emerald);
+}
+
+.quick-qty-pill {
+  height: 28px;
+  padding: 0 9px;
+  border-radius: 6px;
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.quick-qty-pill.active {
+  background: #111827;
+  color: #FFFFFF;
+  border-color: #111827;
+}
+
+.quick-matched-readout {
+  font-size: 12px;
+  color: var(--ink-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.matched-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--mediso-emerald);
+}
+
+.quick-dispatch-submit-btn {
+  background: #111827;
+  color: #FFFFFF;
+  border: none;
+  height: 36px;
+  padding: 0 18px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.quick-dispatch-submit-btn:hover {
+  background: #000000;
+  transform: translateY(-1px);
+}
+
+/* 5-Row Single-Line Flight Strip Table */
+.dispatch-strip-table {
+  border: 1px solid var(--mediso-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.dispatch-strip-thead {
+  display: grid;
+  grid-template-columns: 80px 1.3fr 140px 1.3fr 110px 130px 130px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  height: 38px;
+  background: #F9FAFB;
+  border-bottom: 1px solid var(--mediso-border);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.dispatch-strip-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.dispatch-strip-row {
+  display: grid;
+  grid-template-columns: 80px 1.3fr 140px 1.3fr 110px 130px 130px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  height: 48px;
+  border-bottom: 1px solid #F3F4F6;
+  white-space: nowrap;
+  font-size: 12.5px;
+  transition: background 0.12s ease;
+}
+
+.dispatch-strip-row:hover {
+  background: #F9FAFB;
+}
+
+.strip-id {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.strip-hospital {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.strip-code-badge {
+  font-size: 10px;
+  font-weight: 700;
+  background: #EEF2F6;
+  color: #334155;
+  padding: 2px 5px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.strip-code-badge.recipient {
+  background: #EAF8F4;
+  color: var(--mediso-emerald);
+}
+
+.strip-name {
+  font-weight: 600;
+  color: var(--ink-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.strip-track {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.strip-track-meta {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.strip-track-line {
+  display: flex;
+  align-items: center;
+  width: 90px;
+}
+
+.strip-track-dash {
+  flex: 1;
+  height: 1px;
+  background: #CBD5E1;
+}
+
+.strip-track-arrow {
+  color: var(--mediso-emerald);
+}
+
+.strip-cargo-pill {
+  background: #FEE2E2;
+  color: #DC2626;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 11.5px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.strip-telemetry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--mediso-emerald);
+  font-weight: 600;
+  font-size: 11.5px;
+}
+
+.strip-btn-auth {
+  background: var(--mediso-emerald);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 7px;
+  height: 30px;
+  padding: 0 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.strip-btn-auth:hover {
+  background: #118267;
+}
+
+.strip-btn-delivered {
+  background: #EAF8F4;
+  color: var(--mediso-emerald);
+  border: 1px solid #A7F3D0;
+  border-radius: 7px;
+  height: 30px;
+  padding: 0 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.strip-btn-delivered:hover {
+  background: #D1FAE5;
+}
+
+.strip-completed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  color: #6B7280;
+  font-weight: 600;
+}
+
+/* Pagination Footer */
+.dispatch-pagination-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #FFFFFF;
+  border-top: 1px solid #F3F4F6;
+}
+
+.dispatch-page-info {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+}
+
+.dispatch-page-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dispatch-page-btn {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dispatch-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dispatch-page-btn:not(:disabled):hover {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+}
+
+.dispatch-page-num {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-primary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   STEP 4: HOSPITAL INVENTORY LEDGER (SINGLE-LINE ROWS STRICT)
+   ═══════════════════════════════════════════════════════════════════ */
+.mediso-table-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.mediso-table-topbar {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--mediso-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.mediso-card-sub {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin: 2px 0 0;
+}
+
+.mediso-table-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mediso-table-search {
+  height: 36px;
+  border: 1px solid #E5E7EB;
+  border-radius: 9px;
+  background: #F7F8FA;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mediso-tsearch-icon {
+  color: var(--ink-subtle);
+}
+
+.mediso-tsearch-input {
+  border: none;
+  background: transparent;
+  font-size: 12.5px;
+  color: var(--ink-primary);
+  outline: none;
+  width: 180px;
+  font-family: var(--font-main);
+}
+
+.mediso-btn-table-action {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #E5E7EB;
+  border-radius: 9px;
+  background: #FFFFFF;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.mediso-btn-table-action:hover {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+}
+
+.mediso-status-filter-pills {
+  display: flex;
+  border: 1px solid #E5E7EB;
+  border-radius: 9px;
+  overflow: hidden;
+  background: #F7F8FA;
+}
+
+.mediso-filter-pill {
+  border: none;
+  background: transparent;
+  padding: 0 10px;
+  height: 34px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.mediso-filter-pill.active {
+  background: #FFFFFF;
+  color: var(--ink-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.mediso-table-scroll {
+  overflow-x: auto;
+  max-height: 520px;
+}
+
+.mediso-ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.mediso-ledger-table thead tr {
+  height: 42px;
+  background: #F9FAFB;
+  border-bottom: 1px solid var(--mediso-border);
+}
+
+.mediso-ledger-table th {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  padding: 0 14px;
+  white-space: nowrap;
+}
+
+.mediso-table-row {
+  height: 52px;
+  border-bottom: 1px solid #F3F4F6;
+  transition: background 0.12s ease;
+  white-space: nowrap;
+}
+
+.mediso-table-row:hover {
+  background: #F9FAFB;
+}
+
+.mediso-table-row.row-selected {
+  background: #F0FDF9;
+}
+
+.mediso-ledger-table td {
+  padding: 0 14px;
+  font-size: 13px;
+  color: var(--ink-secondary);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.mediso-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--mediso-emerald);
+  cursor: pointer;
+}
+
+.mediso-facility-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.mediso-avatar-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #EEF2F6;
+  color: #1E293B;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #E2E8F0;
+  flex-shrink: 0;
+}
+
+.mediso-facility-name {
+  font-weight: 600;
+  color: var(--ink-primary);
+  white-space: nowrap;
+}
+
+.mediso-node-id {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  background: #F1F5F9;
+  padding: 2px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+.mediso-zone-cell {
+  color: var(--ink-muted);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.mediso-stock-num {
+  font-weight: 700;
+  color: var(--ink-primary);
+  white-space: nowrap;
+}
+
+.mediso-abo-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.mediso-abo-pill {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.mediso-abo-pill.pill-subtle {
+  color: #64748B;
+  background: transparent;
+}
+
+.mediso-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.status-optimal {
+  background: var(--mediso-emerald-light);
+  color: var(--mediso-emerald);
+}
+
+.status-surplus {
+  background: var(--mediso-amber-light);
+  color: #D97706;
+}
+
+.status-shortage {
+  background: var(--mediso-coral-light);
+  color: #DC2626;
+}
+
+.mediso-action-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.mediso-inspect-btn {
+  border: 1px solid #E5E7EB;
+  border-radius: 7px;
+  background: #FFFFFF;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.mediso-inspect-btn:hover {
+  background: var(--mediso-emerald-soft);
+  border-color: var(--mediso-emerald);
+  color: var(--mediso-emerald);
+}
+
+.btn-dispatch-action {
+  color: var(--mediso-emerald);
+  border-color: rgba(21, 153, 122, 0.35);
+  background: #F0FDF9;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   STEP 5: TAB 3 — STRESS LAB (2-COLUMN INTERACTIVE WORKBENCH)
+   ═══════════════════════════════════════════════════════════════════ */
+.stress-workbench-root {
+  display: grid;
+  grid-template-columns: 440px 1fr;
+  gap: 20px;
+  padding: 20px 28px 36px;
+  height: calc(100vh - 60px);
+  box-sizing: border-box;
+  overflow-y: auto;
+  background: var(--mediso-bg);
+}
+
+/* ── LEFT COLUMN (440px): Interactive Crisis Triggers + Sliders ── */
+.stress-left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.workbench-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.workbench-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.workbench-sub {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin: 2px 0 0;
+}
+
+.workbench-reset-btn {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.workbench-reset-btn:hover {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+  color: var(--ink-primary);
+}
+
+.workbench-scenarios-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.workbench-scenario-card {
+  background: #FFFFFF;
+  border: 1px solid var(--mediso-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.workbench-scenario-card:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.workbench-scenario-card.card-active {
+  border-color: var(--mediso-emerald);
+  background: #F0FDF9;
+  box-shadow: 0 0 0 1.5px var(--mediso-emerald), 0 4px 14px rgba(21, 153, 122, 0.1);
+}
+
+.sc-card-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+}
+
+.sc-icon-square {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sc-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.sc-code-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sc-code {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-muted);
+}
+
+.sc-region {
+  font-size: 11px;
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+.sc-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  margin: 3px 0 2px;
+}
+
+.sc-desc {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.sc-action-btn {
+  background: #F1F5F9;
+  color: var(--ink-secondary);
+  border: 1px solid #E2E8F0;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sc-action-btn:hover {
+  background: #E2E8F0;
+  color: var(--ink-primary);
+}
+
+.sc-action-btn.btn-active {
+  background: var(--mediso-emerald);
+  color: #FFFFFF;
+  border-color: var(--mediso-emerald);
+  box-shadow: 0 2px 6px rgba(21, 153, 122, 0.28);
+}
+
+/* Custom Parametric Shock Card */
+.workbench-custom-card {
+  background: #FFFFFF;
+  border: 1px solid var(--mediso-border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.custom-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.custom-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  margin: 0;
+}
+
+.custom-sub {
+  font-size: 11px;
+  color: var(--ink-muted);
+  margin: 2px 0 0;
+}
+
+.custom-sliders-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.custom-slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cslider-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cslider-title {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+
+.cslider-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mediso-emerald);
+  background: #EAF8F4;
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+
+.stress-range-slider {
+  width: 100%;
+  accent-color: var(--mediso-emerald);
+  cursor: pointer;
+}
+
+.cslider-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--ink-subtle);
+}
+
+.custom-synthesize-btn {
+  background: #111827;
+  color: #FFFFFF;
+  border: none;
+  height: 36px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+  margin-top: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.custom-synthesize-btn:hover {
+  background: #000000;
+  transform: translateY(-1px);
+}
+
+/* ── RIGHT COLUMN (1fr): Live Solver Execution Results & Emergency Routes ── */
+.stress-right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.stress-live-banner {
+  background: linear-gradient(90deg, #121316 0%, #23272F 100%);
+  border-radius: 16px;
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  color: #FFFFFF;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.live-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.live-pulse-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #10B981;
+  box-shadow: 0 0 10px #10B981;
+  flex-shrink: 0;
+}
+
+.live-banner-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.live-banner-sub {
+  font-size: 11.5px;
+  color: #9CA3AF;
+  margin: 3px 0 0;
+}
+
+.live-push-map-btn {
+  background: var(--mediso-emerald);
+  color: #FFFFFF;
+  border: none;
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(21, 153, 122, 0.3);
+}
+
+.live-push-map-btn:hover {
+  background: #118267;
+  transform: translateY(-1px);
+}
+
+/* 3 Dynamic KPI Before/After Cards */
+.stress-kpi-3row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.stress-comparison-card {
+  background: #FFFFFF;
+  border: 1px solid var(--mediso-border);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+}
+
+.scard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.scard-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+
+.scard-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+.badge-green {
+  background: #EAF8F4;
+  color: var(--mediso-emerald);
+}
+
+.scard-giant-num {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--ink-primary);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.scard-unit {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.scard-dual-bar {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dual-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.dual-label {
+  color: var(--ink-muted);
+}
+
+.dual-val {
+  font-weight: 700;
+}
+
+.val-red {
+  color: var(--mediso-crimson);
+}
+
+.val-green {
+  color: var(--mediso-emerald);
+}
+
+.dual-track {
+  width: 100%;
+  height: 5px;
+  background: #EEF2F6;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.dual-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.dual-fill.fill-red {
+  background: var(--mediso-crimson);
+}
+
+.dual-fill.fill-green {
+  background: var(--mediso-emerald);
+}
+
+.scard-subtext {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  line-height: 1.4;
+  margin: 12px 0 12px;
+}
+
+.scard-tag-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+.scard-tag {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  background: #F1F5F9;
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+
+/* Emergency Routes Table */
+.stress-routes-card {
+  background: #FFFFFF;
+  border: 1px solid var(--mediso-border);
+  border-radius: 16px;
+  padding: 18px 22px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.routes-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.routes-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  margin: 0;
+}
+
+.routes-card-sub {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  margin: 2px 0 0;
+}
+
+.routes-count-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--mediso-emerald);
+  background: #EAF8F4;
+  padding: 4px 10px;
+  border-radius: 7px;
+}
+
+.routes-table {
+  border: 1px solid var(--mediso-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.routes-thead {
+  display: grid;
+  grid-template-columns: 80px 1.4fr 24px 1.4fr 110px 150px 1.6fr;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  height: 38px;
+  background: #F9FAFB;
+  border-bottom: 1px solid var(--mediso-border);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.routes-tbody {
+  display: flex;
+  flex-direction: column;
+}
+
+.routes-row {
+  display: grid;
+  grid-template-columns: 80px 1.4fr 24px 1.4fr 110px 150px 1.6fr;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  height: 46px;
+  border-bottom: 1px solid #F3F4F6;
+  font-size: 12px;
+  white-space: nowrap;
+  transition: background 0.12s ease;
+}
+
+.routes-row:hover {
+  background: #F9FAFB;
+}
+
+.route-id {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.route-hospital {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  overflow: hidden;
+}
+
+.route-badge {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+
+.route-badge.donor {
+  background: #EEF2F6;
+  color: #1E293B;
+}
+
+.route-badge.recipient {
+  background: #EAF8F4;
+  color: var(--mediso-emerald);
+}
+
+.route-name {
+  font-weight: 600;
+  color: var(--ink-primary);
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.route-arrow {
+  color: #9CA3AF;
+  flex-shrink: 0;
+}
+
+.route-cargo-pill {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.route-eta {
+  display: flex;
+  align-items: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #D97706;
+}
+
+.route-reason {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  text-overflow: ellipsis;
+  overflow: hidden;
+  text-align: right;
+  padding-right: 10px;
+}
+
+/* ── Toast Notifications ── */
+.mediso-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 28px;
+  background: #111827;
+  color: #FFFFFF;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 100;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.mediso-toast.toast-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mediso-toast-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+}
+
+.mediso-toast-dot.dot-success {
+  background: #0c8a60;
+}
+
+.mediso-toast-dot.dot-error {
+  background: #EF4444;
+}
