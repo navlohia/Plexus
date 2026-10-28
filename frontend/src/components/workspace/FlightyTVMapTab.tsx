@@ -28,9 +28,9 @@ const CARTO_POSITRON = "https://basemaps.cartocdn.com/gl/positron-gl-style/style
 
 // Optimized initial viewport
 const INITIAL_VIEW = {
-  longitude: 77.14,
-  latitude: 28.58,
-  zoom: 10.6,
+  longitude: 77.16,
+  latitude: 28.585,
+  zoom: 10.5,
   pitch: 0,
   bearing: 0,
   transitionDuration: 0,
@@ -225,22 +225,39 @@ export default function FlightyTVMapTab({
     }
   }, [activeCrisisId]);
 
-  // Enriched hospital list
+  // Enriched hospital list with unified live status calculation
   const hospitalList = useMemo(() => {
     const liveNodes = Array.isArray(state?.nodes) ? state.nodes : [];
     return Object.entries(HOSPITAL_REGISTRY).map(([id, meta]) => {
       const liveNode = liveNodes.find((n) => n && n.id === id);
       const stock = liveNode
         ? Object.values(liveNode.inventory_by_blood_and_age).reduce(
-            (s, b) => s + Object.values(b).reduce((acc, v) => acc + v, 0),
+            (s, b) => s + (b ? Object.values(b).reduce((acc, v) => acc + (Number(v) || 0), 0) : 0),
             0
           )
         : meta.stock;
       const netBal = liveNode ? liveNode.net_balance : meta.netBalance;
 
+      // Unified status calculation
+      let status: "Shortage" | "Expiring" | "Optimal" = "Optimal";
+      let barColor: "crimson" | "amber" | "emerald" = "emerald";
+
+      if (netBal < -5 || stock < 70) {
+        status = "Shortage";
+        barColor = "crimson";
+      } else if (stock >= 98 || netBal > 10) {
+        status = "Expiring";
+        barColor = "amber";
+      } else {
+        status = "Optimal";
+        barColor = "emerald";
+      }
+
       return {
         id,
         ...meta,
+        status,
+        barColor,
         stock: stock || meta.stock,
         netBalance: netBal !== undefined ? netBal : meta.netBalance,
       };
@@ -301,63 +318,81 @@ export default function FlightyTVMapTab({
     });
   }, [selectedNode]);
 
-  // Detailed Highway Corridors using Catmull-Rom road splines (no stringy spaghetti!)
-  const routeGeoJSON = useMemo((): GeoJSON.FeatureCollection => {
-    if (!showArcs) return { type: "FeatureCollection", features: [] };
+  // Continuous highway van movement loop
+  const [courierProgress, setCourierProgress] = useState(0);
+  useEffect(() => {
+    let animId: number;
+    let start: number | null = null;
+    const loop = (ts: number) => {
+      if (!start) start = ts;
+      const elapsed = (ts - start) / 1000;
+      setCourierProgress((elapsed * 0.05) % 1);
+      animId = requestAnimationFrame(loop);
+    };
+    animId = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(animId);
+  }, []);
 
+  // Detailed Highway Corridors using Catmull-Rom road splines (no stringy spaghetti!)
+  // Active routes combining crisis corridors, live state transfers, and primary corridors
+  const activeRoutes = useMemo(() => {
     const liveTransfers = Array.isArray(state?.transfers) ? state.transfers : [];
-    let activeRoutes: Array<{
-      source: string;
-      target: string;
-      blood: string;
-      units: number;
-      isEmergency?: boolean;
-    }> = [];
+    const validTransfers = liveTransfers
+      .filter((t: any) => t && t.status !== "DELIVERED" && HOSPITAL_REGISTRY[t.source_id] && HOSPITAL_REGISTRY[t.target_id])
+      .map((t: any) => ({
+        source: t.source_id,
+        target: t.target_id,
+        blood: t.donor_blood || "O+",
+        units: t.units || 8,
+        eta: t.eta_mins || 20,
+        isEmergency: t.urgency === "CRITICAL" || String(t.id).startsWith("#EMG"),
+      }));
 
     if (activeCrisis) {
-      activeRoutes = activeCrisis.emergencyRoutes.map((r) => ({
+      const crisisRoutes = activeCrisis.emergencyRoutes.map((r) => ({
         source: r.source_id,
         target: r.target_id,
         blood: r.blood,
         units: r.units,
+        eta: parseInt(r.eta) || 15,
         isEmergency: true,
       }));
-    } else {
-      activeRoutes = PRIMARY_EXPRESS_CORRIDORS;
+      const extra = validTransfers.filter(
+        (st) => !crisisRoutes.some((cr) => cr.source === st.source && cr.target === st.target)
+      );
+      return [...crisisRoutes, ...extra];
     }
+
+    const merged = [...validTransfers];
+    for (const primary of PRIMARY_EXPRESS_CORRIDORS) {
+      if (!merged.some((m) => m.source === primary.source && m.target === primary.target)) {
+        merged.push({ ...primary, eta: 20, isEmergency: false });
+      }
+    }
+    return merged;
+  }, [state?.transfers, activeCrisis]);
+
+  // Detailed Highway Corridors using Catmull-Rom road splines (no stringy spaghetti!)
+  const routeGeoJSON = useMemo((): GeoJSON.FeatureCollection => {
+    if (!showArcs) return { type: "FeatureCollection", features: [] };
+
+    let routes = [...activeRoutes];
 
     // If user has selected a hospital, ensure its routes are prominently highlighted
     if (selectedHospitalId && HOSPITAL_REGISTRY[selectedHospitalId]) {
-      const hospitalConnected = liveTransfers.filter(
-        (t: any) => t && (t.source_id === selectedHospitalId || t.target_id === selectedHospitalId)
+      const hospitalConnected = routes.filter(
+        (r) => r.source === selectedHospitalId || r.target === selectedHospitalId
       );
       if (hospitalConnected.length > 0) {
-        const selectedRoutes = hospitalConnected
-          .filter((t: any) => HOSPITAL_REGISTRY[t.source_id] && HOSPITAL_REGISTRY[t.target_id])
-          .map((t: any) => ({
-            source: t.source_id,
-            target: t.target_id,
-            blood: t.donor_blood || "O+",
-            units: t.units || 8,
-            isEmergency: t.urgency === "CRITICAL",
-          }));
-        activeRoutes = [
-          ...selectedRoutes,
-          ...activeRoutes.filter((r) => !selectedRoutes.some((sr: any) => sr.source === r.source && sr.target === r.target)),
+        routes = [
+          ...hospitalConnected,
+          ...routes.filter((r) => !hospitalConnected.some((hr) => hr.source === r.source && hr.target === r.target)),
         ];
-      } else {
-        const partnerId = selectedHospitalId === "ND-01" ? "ND-04" : selectedHospitalId === "ND-02" ? "ND-03" : "ND-01";
-        if (HOSPITAL_REGISTRY[partnerId]) {
-          activeRoutes = [
-            { source: partnerId, target: selectedHospitalId, blood: "O+", units: 8 },
-            ...activeRoutes,
-          ];
-        }
       }
     }
 
     // Limit to at most 6 clean arterial corridors at any moment to prevent visual clutter
-    const displayed = activeRoutes.slice(0, 6);
+    const displayed = routes.slice(0, 6);
 
     const features = displayed
       .map((arc) => {
@@ -381,7 +416,41 @@ export default function FlightyTVMapTab({
       .filter(Boolean) as GeoJSON.Feature[];
 
     return { type: "FeatureCollection", features };
-  }, [showArcs, state?.transfers, selectedHospitalId]);
+  }, [showArcs, activeRoutes, selectedHospitalId]);
+
+  // Interpolated courier positions along highway splines
+  const courierMarkers = useMemo(() => {
+    if (!showArcs) return [];
+    return activeRoutes.slice(0, 6).map((route, idx) => {
+      const srcMeta = HOSPITAL_REGISTRY[route.source];
+      const tgtMeta = HOSPITAL_REGISTRY[route.target];
+      if (!srcMeta || !tgtMeta) return null;
+
+      const waypoints = getCorridorWaypoints(srcMeta.coords, tgtMeta.coords);
+      const spline = catmullRomSpline(waypoints, 12);
+      if (spline.length < 2) return null;
+
+      const offset = (idx * 0.28) % 1;
+      const progress = (courierProgress + offset) % 1;
+      const exactIdx = progress * (spline.length - 1);
+      const baseIdx = Math.floor(exactIdx);
+      const frac = exactIdx - baseIdx;
+      const nextIdx = Math.min(spline.length - 1, baseIdx + 1);
+
+      const lng = spline[baseIdx][0] + (spline[nextIdx][0] - spline[baseIdx][0]) * frac;
+      const lat = spline[baseIdx][1] + (spline[nextIdx][1] - spline[baseIdx][1]) * frac;
+
+      return {
+        id: `van-${route.source}-${route.target}-${idx}`,
+        lng,
+        lat,
+        units: route.units,
+        blood: route.blood,
+        eta: route.eta || 18,
+        isEmergency: route.isEmergency || tgtMeta.status === "Shortage",
+      };
+    }).filter(Boolean);
+  }, [activeRoutes, courierProgress, showArcs]);
 
   return (
     <div className="flighty-tv-outer-shell">
@@ -583,6 +652,40 @@ export default function FlightyTVMapTab({
               />
             </Source>
           )}
+
+                    {/* ── LIVE MOVING COURIER VANS ON HIGHWAYS ── */}
+          {courierMarkers.map((van: any) => (
+            <Marker
+              key={van.id}
+              longitude={van.lng}
+              latitude={van.lat}
+              anchor="center"
+              style={{ zIndex: 16, pointerEvents: "none" }}
+            >
+              <div
+                style={{
+                  background: "#0F172A",
+                  color: "#FFFFFF",
+                  padding: "3px 8px",
+                  borderRadius: "999px",
+                  fontSize: "10.5px",
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.35)",
+                  border: van.isEmergency ? "1.5px solid #E11D48" : "1.5px solid #15997A",
+                  whiteSpace: "nowrap",
+                  transform: "translateY(-14px)",
+                }}
+              >
+                <span>🚐</span>
+                <span>{van.units}u {van.blood}</span>
+                <span style={{ opacity: 0.5 }}>·</span>
+                <span style={{ color: van.isEmergency ? "#FDA4AF" : "#34D399" }}>{van.eta}m</span>
+              </div>
+            </Marker>
+          ))}
 
           {/* ── HIGH-PRIORITY INSTANT-CLICK HOSPITAL MAP MARKERS ── */}
           {hospitalList.map((h) => {

@@ -304,55 +304,175 @@ export default function WorkspaceShell({ initialTab, initialScenario, onExit }: 
   }, [isRebalancing]);
 
   const handleTransferRequest = useCallback(async (p: TransferRequestInput) => {
-    try {
-      const nextState = await createTransferRequest(p);
-      setState(nextState);
-      showToast("Transfer order dispatched");
-    } catch {
-      // Local fallback for offline/preview
-      const newTx = {
-        id: `#TX-${Math.floor(1050 + Math.random() * 50)}`,
-        source_id: "ND-04",
-        source_name: "Fortis Noida Sec-62",
-        source_zone: "Noida",
-        target_id: p.target_id,
-        target_name: p.target_id,
-        target_zone: "NCR Corridor",
-        donor_blood: p.blood,
-        recipient_blood: p.blood,
-        units: p.units,
-        distance_km: 14.8,
-        eta_mins: 22,
-        cooler_temp_c: 22.0,
-        age_hours: 24,
-        remaining_hours: 48,
-        status: "APPROVED" as TransferStatus,
-        origin: "MANUAL" as const,
-        urgency: p.urgency || ("CRITICAL" as const),
-        reason_text: "Manual emergency dispatch",
-        created_at: "Just now",
-      };
-      setState((prev) => ({
-        ...prev,
-        transfers: [newTx, ...prev.transfers],
-      }));
-      showToast("Transfer order dispatched");
+    // Determine smart matched donor based on target
+    let donorId = "ND-04";
+    let donorName = "Fortis Hospital Noida";
+    let donorZone = "Noida Sec-62";
+    let distKm = 18.2;
+    let etaMins = 22;
+
+    if (p.target_id === "ND-04") {
+      donorId = "ND-05";
+      donorName = "Medanta The Medicity";
+      donorZone = "Gurugram NH-48";
+      distKm = 24.2;
+      etaMins = 28;
+    } else if (p.target_id === "ND-05") {
+      donorId = "ND-11";
+      donorName = "Apollo Hospital Sarita";
+      donorZone = "South Delhi";
+      distKm = 21.0;
+      etaMins = 25;
+    } else if (p.target_id === "ND-02") {
+      donorId = "ND-03";
+      donorName = "Max Super Saket";
+      donorZone = "South Delhi";
+      distKm = 7.8;
+      etaMins = 12;
+    } else if (p.target_id === "ND-07") {
+      donorId = "ND-04";
+      donorName = "Fortis Hospital Noida";
+      donorZone = "Noida Sec-62";
+      distKm = 11.4;
+      etaMins = 18;
     }
+
+    const hospitalLookup: Record<string, { name: string; zone: string }> = {
+      "ND-01": { name: "AIIMS Trauma Center", zone: "Central Delhi" },
+      "ND-02": { name: "Safdarjung Hospital", zone: "South Delhi" },
+      "ND-03": { name: "Max Super Saket", zone: "South Delhi" },
+      "ND-04": { name: "Fortis Hospital Noida", zone: "Noida Sec-62" },
+      "ND-05": { name: "Medanta The Medicity", zone: "Gurugram NH-48" },
+      "ND-06": { name: "Fortis Escorts Okhla", zone: "South Delhi" },
+      "ND-07": { name: "GTB Hospital East Delhi", zone: "East Delhi" },
+      "ND-08": { name: "Dr. RML Hospital", zone: "Central Delhi" },
+      "ND-09": { name: "Lok Nayak LNJP", zone: "Central Delhi" },
+      "ND-10": { name: "Sir Ganga Ram Hospital", zone: "Old Rajinder" },
+      "ND-11": { name: "Apollo Hospital Sarita", zone: "South Delhi" },
+      "ND-12": { name: "Rajiv Gandhi Super", zone: "East Delhi" },
+      "ND-13": { name: "Fortis Vasant Kunj", zone: "South Delhi" },
+      "ND-14": { name: "BLK-Max Super Specialty", zone: "Central Delhi" },
+      "ND-15": { name: "Manipal Hospital Dwarka", zone: "West Delhi" },
+      "ND-16": { name: "St. Stephens Tis Hazari", zone: "North Delhi" },
+      "ND-17": { name: "Saroj Hospital Rohini", zone: "North Delhi" },
+      "ND-18": { name: "Venkateshwar Dwarka", zone: "West Delhi" },
+      "ND-19": { name: "Paras Health Sector 43", zone: "Gurugram" },
+      "ND-20": { name: "Jaypee Hospital Noida", zone: "Noida Sec-128" },
+      "ND-21": { name: "DDU Hospital Hari Nagar", zone: "West Delhi" },
+      "ND-22": { name: "Sanjay Gandhi Mangolpuri", zone: "North Delhi" },
+      "ND-23": { name: "Artemis Hospital Sector 51", zone: "Gurugram" },
+      "ND-24": { name: "Max Super Patparganj", zone: "East Delhi" },
+      "ND-25": { name: "Holy Family Okhla", zone: "South Delhi" },
+    };
+
+    const targetInfo = hospitalLookup[p.target_id] || { name: p.target_id, zone: "NCR Corridor" };
+
+    const newTx: TransferOrder = {
+      id: `#TX-${Math.floor(1050 + Math.random() * 50)}`,
+      source_id: donorId,
+      source_name: donorName,
+      source_zone: donorZone,
+      target_id: p.target_id,
+      target_name: targetInfo.name,
+      target_zone: targetInfo.zone,
+      donor_blood: p.blood,
+      recipient_blood: p.blood,
+      units: p.units,
+      distance_km: distKm,
+      eta_mins: etaMins,
+      cooler_temp_c: 22.0,
+      age_hours: 24,
+      remaining_hours: 48,
+      status: "APPROVED" as TransferStatus,
+      origin: "MANUAL" as const,
+      urgency: p.urgency || ("CRITICAL" as const),
+      reason_text: `Express courier dispatch to ${targetInfo.name}`,
+      created_at: "Just now",
+    };
+
+    // Atomically deduct stock from donor and update recipient in shared nodes
+    setState((prev) => {
+      const currentNodes = Array.isArray(prev?.nodes) && prev.nodes.length > 0 ? prev.nodes : FALLBACK_STATE.nodes;
+      const updatedNodes = currentNodes.map((n) => {
+        if (n.id === donorId) {
+          const inv = { ...(n.inventory_by_blood_and_age || {}) };
+          const bInv = { ...(inv[p.blood] || {}) };
+          let needed = p.units;
+          for (const age of Object.keys(bInv)) {
+            const aNum = Number(age);
+            const cur = bInv[aNum] || 0;
+            if (cur > 0) {
+              const take = Math.min(needed, cur);
+              bInv[aNum] -= take;
+              needed -= take;
+              if (needed <= 0) break;
+            }
+          }
+          inv[p.blood] = bInv;
+          return {
+            ...n,
+            inventory_by_blood_and_age: inv,
+            net_balance: (n.net_balance || 0) - p.units,
+          };
+        }
+        if (n.id === p.target_id) {
+          return {
+            ...n,
+            net_balance: (n.net_balance || 0) + p.units,
+          };
+        }
+        return n;
+      });
+
+      return {
+        ...prev,
+        nodes: updatedNodes,
+        transfers: [newTx, ...prev.transfers],
+      };
+    });
+
+    showToast(`✓ Express Courier Dispatched: ${p.units}u ${p.blood} to ${targetInfo.name}`);
+
+    // Fire background API dispatch
+    createTransferRequest(p).catch(() => {});
   }, []);
 
   const handleStatusChange = useCallback(async (txId: string, status: TransferStatus) => {
-    try {
-      const nextState = await setTransferStatus(txId, status);
-      setState(nextState);
-      showToast(`Transfer status updated to ${status}`);
-    } catch {
-      // Local update fallback
-      setState((prev) => ({
+    setState((prev) => {
+      const cleanTxId = txId.startsWith("#") ? txId : `#${txId}`;
+      const bareTxId = txId.replace("#", "");
+      const tx = prev.transfers.find((t) => t.id === cleanTxId || t.id === bareTxId);
+
+      let updatedNodes = prev.nodes;
+      if (status === "DELIVERED" && tx) {
+        // Credit units to recipient node upon delivery
+        updatedNodes = prev.nodes.map((n) => {
+          if (n.id === tx.target_id) {
+            const inv = { ...(n.inventory_by_blood_and_age || {}) };
+            const bInv = { ...(inv[tx.recipient_blood] || {}) };
+            bInv[24] = (bInv[24] || 0) + tx.units;
+            inv[tx.recipient_blood] = bInv;
+            return {
+              ...n,
+              inventory_by_blood_and_age: inv,
+              net_balance: (n.net_balance || 0) + tx.units,
+            };
+          }
+          return n;
+        });
+      }
+
+      return {
         ...prev,
-        transfers: prev.transfers.map((t) => (t.id === txId ? { ...t, status } : t)),
-      }));
-      showToast(`Transfer updated → ${status}`);
-    }
+        nodes: updatedNodes,
+        transfers: prev.transfers.map((t) =>
+          t.id === cleanTxId || t.id === bareTxId ? { ...t, status } : t
+        ),
+      };
+    });
+
+    showToast(`Transfer updated → ${status}`);
+    setTransferStatus(txId.replace("#", ""), status).catch(() => {});
   }, []);
 
   const handleActivateScenario = useCallback((scenarioId: string) => {
