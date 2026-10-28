@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
-import { RotateCcw, CheckCircle2, Zap, ArrowRight, ShieldCheck, Clock, Award, Truck, AlertTriangle } from "lucide-react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { RotateCcw, CheckCircle2, Zap, ArrowRight, ChevronDown, ChevronUp, ShieldCheck, Clock, Award } from "lucide-react";
 import type { TickState } from "../../types";
 import { CRISIS_SCENARIOS, BASELINE_SCENARIO, CRISIS_BUTTONS } from "../../lib/crisisData";
 
@@ -11,6 +11,38 @@ interface SurgeTabProps {
   onNavigateToMap: () => void;
 }
 
+// 4 Primary Donor Reserve Hubs (Left Supply Tier)
+const DONOR_NODES = [
+  { id: "N62", name: "Fortis Noida", sub: "Surplus Hub · Sec-62", circleX: 52, pillX: 80, y: 80 },
+  { id: "MDT", name: "Medanta Hub", sub: "Surplus Hub · NH-48", circleX: 52, pillX: 80, y: 180 },
+  { id: "APL", name: "Apollo Sarita", sub: "Surplus Hub · Mathura Rd", circleX: 52, pillX: 80, y: 280 },
+  { id: "MAX", name: "Max Saket", sub: "Surplus Hub · Press Enclave", circleX: 52, pillX: 80, y: 380 },
+];
+
+// 3 Target Crisis Surge Nodes (Right Demand Tier)
+const CRISIS_NODES = [
+  { id: "AIM", name: "AIIMS Trauma", sub: "Central Delhi Trauma Hub", circleX: 948, pillX: 765, y: 110, accent: "#E11D48" },
+  { id: "GTB", name: "GTB East Delhi", sub: "Trans-Yamuna Epidemic Hub", circleX: 948, pillX: 765, y: 230, accent: "#D97706" },
+  { id: "SFD", name: "Safdarjung", sub: "South Delhi Trauma Wing", circleX: 948, pillX: 765, y: 350, accent: "#0284C7" },
+];
+
+// 7 Graceful Wide Bézier Routing Vessels across major Delhi-NCR corridors
+const WIDE_VESSELS = [
+  { fromX: 230, fromY: 80, toX: 765, toY: 110, delay: "0s", label: "DND Express Corridor", tagY: 88 },
+  { fromX: 230, fromY: 80, toX: 765, toY: 230, delay: "0.5s", label: "Vikas Marg Arterial", tagY: 150 },
+  { fromX: 230, fromY: 180, toX: 765, toY: 110, delay: "0.9s", label: "NH-48 Trauma Express", tagY: 136 },
+  { fromX: 230, fromY: 180, toX: 765, toY: 350, delay: "0.2s", label: "Mehrauli-Gurugram Arterial", tagY: 260 },
+  { fromX: 230, fromY: 280, toX: 765, toY: 230, delay: "0.7s", label: "Barapullah Elevated Bypass", tagY: 248 },
+  { fromX: 230, fromY: 280, toX: 765, toY: 350, delay: "1.3s", label: "Ring Road South Corridor", tagY: 312 },
+  { fromX: 230, fromY: 380, toX: 765, toY: 350, delay: "0.4s", label: "Aurobindo Marg Direct Link", tagY: 368 },
+];
+
+function wideBezierPath(x1: number, y1: number, x2: number, y2: number): string {
+  const cx1 = x1 + (x2 - x1) * 0.44;
+  const cx2 = x1 + (x2 - x1) * 0.56;
+  return `M${x1},${y1} C${cx1},${y1} ${cx2},${y2} ${x2},${y2}`;
+}
+
 export default function SurgeTab({
   state: _state,
   activeCrisisId,
@@ -18,7 +50,19 @@ export default function SurgeTab({
   onStopScenario,
   onNavigateToMap,
 }: SurgeTabProps) {
+  const [animKey, setAnimKey] = useState(0);
   const [isSolving, setIsSolving] = useState(false);
+
+  const section1Ref = useRef<HTMLDivElement>(null);
+  const section2Ref = useRef<HTMLDivElement>(null);
+
+  const scrollToSection1 = () => {
+    section1Ref.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const scrollToSection2 = () => {
+    section2Ref.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   // Derive active scenario result from global crisisData
   const result = useMemo(() => {
@@ -38,15 +82,22 @@ export default function SurgeTab({
     }
 
     setIsSolving(true);
+    setAnimKey((k) => k + 1);
     onActivateScenario(id);
 
     setTimeout(() => {
       setIsSolving(false);
-    }, 350);
+    }, 400);
+
+    // Smoothly scroll down to reveal animation like landing page
+    setTimeout(() => {
+      scrollToSection2();
+    }, 150);
   };
 
   const handleStopScenario = () => {
     setIsSolving(false);
+    setAnimKey((k) => k + 1);
     onStopScenario();
   };
 
@@ -85,64 +136,145 @@ export default function SurgeTab({
     <div
       style={{
         height: "calc(100vh - 60px)",
-        overflow: "hidden",
-        padding: "16px 24px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "14px",
+        overflowY: "auto",
+        scrollSnapType: "y mandatory",
+        scrollBehavior: "smooth",
         background: "#F8FAFC",
         boxSizing: "border-box",
         fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
       }}
     >
-      {/* ── ROW 1: 3 Tactile Crisis Trigger Buttons (Plain, Simple, 100% Width) ── */}
+      {/* ══════════════════════════════════════════════════════════════
+          PAGE 1: MINIMALIST SCENARIO CHOOSER (LANDING-PAGE STYLE)
+         ══════════════════════════════════════════════════════════════ */}
       <div
+        ref={section1Ref}
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "14px",
-          flexShrink: 0,
+          minHeight: "calc(100vh - 60px)",
+          scrollSnapAlign: "start",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "40px 24px 30px",
+          boxSizing: "border-box",
+          position: "relative",
         }}
       >
-        {CRISIS_BUTTONS.map((btn) => {
-          const isActive = activeCrisisId === btn.id;
-          return (
-            <button
-              key={btn.id}
-              type="button"
-              onClick={() => handleToggleScenario(btn.id)}
-              title={isActive ? "Click to stop this crisis scenario" : "Click to simulate this crisis"}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-                gap: "6px",
-                padding: "14px 18px",
-                borderRadius: "14px",
-                border: isActive ? `2px solid ${btn.accent}` : "1.5px solid #E2E8F0",
-                background: "#FFFFFF",
-                color: "#111827",
-                cursor: "pointer",
-                transition: "all 0.18s ease",
-                transform: isActive ? "translateY(-1px)" : "translateY(0)",
-                boxShadow: isActive
-                  ? `0 6px 18px -3px ${btn.accent}24, 0 2px 6px rgba(0,0,0,0.03)`
-                  : "0 1px 3px rgba(0,0,0,0.03)",
-                textAlign: "left",
-              }}
-            >
-              <div
+        {/* Minimalist Landing Eyebrow */}
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "7px",
+            background: "#ECFDF5",
+            border: "1px solid #A7F3D0",
+            padding: "4px 14px",
+            borderRadius: "999px",
+            marginBottom: "16px",
+          }}
+        >
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: "#059669",
+              display: "inline-block",
+            }}
+          />
+          <span
+            style={{
+              fontSize: "11px",
+              fontWeight: 800,
+              color: "#065F46",
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+            }}
+          >
+            STRESS LAB · SHOCK INJECTION
+          </span>
+        </div>
+
+        {/* Minimalist Landing Headline */}
+        <h1
+          style={{
+            fontSize: "36px",
+            fontWeight: 800,
+            color: "#0F172A",
+            margin: "0 0 10px",
+            textAlign: "center",
+            letterSpacing: "-0.03em",
+            lineHeight: 1.2,
+          }}
+        >
+          Simulate Network Shocks.{" "}
+          <span style={{ fontWeight: 400, color: "#64748B" }}>Watch the Mesh Adapt.</span>
+        </h1>
+
+        <p
+          style={{
+            fontSize: "15px",
+            color: "#64748B",
+            maxWidth: "600px",
+            textAlign: "center",
+            margin: "0 0 36px",
+            lineHeight: 1.6,
+          }}
+        >
+          Trigger clinical demand shocks across 25 Delhi-NCR hospitals. Google OR-Tools instantly
+          rebalances cold-chain blood logistics to prevent critical stockouts.
+        </p>
+
+        {/* 3 Minimalist Tactile Scenario Cards */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: "18px",
+            maxWidth: "1060px",
+            width: "100%",
+            marginBottom: "36px",
+          }}
+        >
+          {CRISIS_BUTTONS.map((btn) => {
+            const isActive = activeCrisisId === btn.id;
+            return (
+              <button
+                key={btn.id}
+                type="button"
+                onClick={() => handleToggleScenario(btn.id)}
+                title={isActive ? "Click to stop this crisis scenario" : "Click to simulate this crisis"}
                 style={{
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  width: "100%",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  gap: "12px",
+                  padding: "22px 24px",
+                  borderRadius: "18px",
+                  border: isActive ? `2px solid ${btn.accent}` : "1.5px solid #E2E8F0",
+                  background: "#FFFFFF",
+                  color: "#111827",
+                  cursor: "pointer",
+                  transition: "all 0.2s cubic-bezier(0.2, 1, 0.3, 1)",
+                  transform: isActive ? "translateY(-2px)" : "translateY(0)",
+                  boxShadow: isActive
+                    ? `0 12px 30px -4px ${btn.accent}26, 0 2px 8px rgba(0,0,0,0.04)`
+                    : "0 2px 8px rgba(0,0,0,0.03)",
+                  textAlign: "left",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    width: "100%",
+                  }}
+                >
                   <span
                     style={{
-                      fontSize: "11px",
+                      fontSize: "12px",
                       fontWeight: 800,
                       color: isActive ? btn.accent : "#94A3B8",
                       fontFamily: "monospace",
@@ -151,491 +283,195 @@ export default function SurgeTab({
                   >
                     {btn.num}
                   </span>
-                  <span
-                    style={{
-                      fontSize: "10px",
-                      fontWeight: 700,
-                      color: "#64748B",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                    }}
-                  >
-                    SHOCK SCENARIO
-                  </span>
+
+                  {isActive ? (
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "5px",
+                        background: btn.accentBg,
+                        color: btn.accent,
+                        border: `1px solid ${btn.accent}33`,
+                        padding: "3px 10px",
+                        borderRadius: "999px",
+                        fontSize: "10px",
+                        fontWeight: 800,
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      <CheckCircle2 size={12} strokeWidth={2.8} />
+                      ACTIVE SHOCK
+                    </span>
+                  ) : (
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        fontSize: "10.5px",
+                        color: "#475569",
+                        fontWeight: 700,
+                        background: "#F1F5F9",
+                        padding: "3px 9px",
+                        borderRadius: "6px",
+                      }}
+                    >
+                      <Zap size={11} color="#059669" /> Simulate Shock
+                    </span>
+                  )}
                 </div>
 
-                {/* Status Indicator */}
-                {isActive ? (
-                  <span
+                <div>
+                  <h3
                     style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "5px",
-                      background: btn.accentBg,
-                      color: btn.accent,
-                      border: `1px solid ${btn.accent}33`,
-                      padding: "3px 9px",
-                      borderRadius: "999px",
-                      fontSize: "10px",
+                      margin: "0 0 6px",
+                      fontSize: "16px",
                       fontWeight: 800,
-                      letterSpacing: "0.03em",
+                      color: "#0F172A",
+                      lineHeight: 1.3,
                     }}
                   >
-                    {isSolving ? (
-                      "SOLVING..."
-                    ) : (
-                      <>
-                        <CheckCircle2 size={11} strokeWidth={2.8} />
-                        ACTIVE · CLICK TO STOP
-                      </>
-                    )}
-                  </span>
-                ) : (
-                  <span
+                    {btn.label}
+                  </h3>
+                  <p
                     style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "4px",
-                      fontSize: "10.5px",
-                      color: "#475569",
-                      fontWeight: 700,
-                      background: "#F1F5F9",
-                      padding: "2px 8px",
-                      borderRadius: "6px",
+                      margin: 0,
+                      fontSize: "12.5px",
+                      color: "#64748B",
+                      lineHeight: 1.5,
                     }}
                   >
-                    <Zap size={11} color="#059669" /> Simulate Shock
-                  </span>
-                )}
-              </div>
+                    {btn.sub}
+                  </p>
+                </div>
 
-              <div>
-                <span
+                <div
                   style={{
-                    fontSize: "14px",
-                    fontWeight: 800,
-                    color: "#0F172A",
-                    lineHeight: 1.3,
+                    marginTop: "4px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    color: isActive ? btn.accent : "#059669",
                   }}
                 >
-                  {btn.label}
-                </span>
-                <p
-                  style={{
-                    margin: "2px 0 0",
-                    fontSize: "11.5px",
-                    color: "#64748B",
-                    lineHeight: 1.4,
-                  }}
-                >
-                  {btn.sub}
-                </p>
-              </div>
-            </button>
-          );
-        })}
+                  <span>{isActive ? "Viewing Live Mesh Below" : "Launch Simulation & Scroll"}</span>
+                  <ArrowRight size={13} strokeWidth={2.6} />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Bouncing Scroll Down Prompt to Lower Page */}
+        <button
+          type="button"
+          onClick={scrollToSection2}
+          style={{
+            background: "transparent",
+            border: "none",
+            color: "#64748B",
+            display: "inline-flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "6px",
+            fontSize: "12px",
+            fontWeight: 700,
+            cursor: "pointer",
+            transition: "all 0.15s ease",
+          }}
+        >
+          <span>Scroll down to view live OR-Tools network mesh</span>
+          <ChevronDown size={18} strokeWidth={2.4} color="#059669" />
+        </button>
       </div>
 
-      {/* ── ROW 2: PLAIN, SIMPLE WORKBENCH (Zero Mess, Clean Data Presentation) ── */}
+      {/* ══════════════════════════════════════════════════════════════
+          PAGE 2: CINEMATIC FULL-SIZE ANIMATED BIO-MESH ARCHITECTURE
+         ══════════════════════════════════════════════════════════════ */}
       <div
+        ref={section2Ref}
         style={{
-          flex: 1,
-          background: "#FFFFFF",
-          border: "1px solid #E2E8F0",
-          borderRadius: "18px",
-          padding: "18px 22px",
+          minHeight: "calc(100vh - 60px)",
+          scrollSnapAlign: "start",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.02)",
-          minHeight: 0,
+          padding: "24px 32px",
+          background: "#FFFFFF",
+          boxSizing: "border-box",
+          position: "relative",
         }}
       >
-        {/* Header Ribbon with High-Value Clinical Telemetry */}
+        {/* Top Control Bar with Navigation and Scenario Status */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             flexWrap: "wrap",
-            gap: "12px",
+            gap: "14px",
             borderBottom: "1px solid #F1F5F9",
             paddingBottom: "14px",
             flexShrink: 0,
           }}
         >
           {/* Left Title & Status */}
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-              <span
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 800,
-                  letterSpacing: "0.08em",
-                  color: isSolving ? "#D97706" : activeCrisisId ? "#065F46" : "#2563EB",
-                  background: isSolving ? "#FEF3C7" : activeCrisisId ? "#ECFDF5" : "#EFF6FF",
-                  border: `1px solid ${isSolving ? "#FDE68A" : activeCrisisId ? "#A7F3D0" : "#BFDBFE"}`,
-                  padding: "3px 9px",
-                  borderRadius: "6px",
-                  textTransform: "uppercase",
-                }}
-              >
-                {isSolving
-                  ? "SOLVING NETWORK ARCS..."
-                  : activeCrisisId
-                  ? "OR-TOOLS MIN-COST MAX-FLOW · CONVERGED IN 14.2ms"
-                  : "BASELINE OR-TOOLS DISPATCH · STEADY STATE"}
-              </span>
-              <span style={{ fontSize: "11px", color: "#CBD5E1" }}>·</span>
-              <span style={{ fontSize: "11.5px", color: "#64748B", fontFamily: "monospace" }}>
-                {result.bannerTelemetry}
-              </span>
-            </div>
-            <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800, color: "#0F172A" }}>
-              {activeCrisis ? activeCrisis.label : "Baseline NCR Network Flow"}
-            </h3>
-          </div>
-
-          {/* Right: Key Performance Impact Chips */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-            {/* Stockouts Chip */}
-            <div
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <button
+              type="button"
+              onClick={scrollToSection1}
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "7px",
-                background: "#F0FDF4",
-                border: "1px solid #BBF7D0",
-                padding: "6px 12px",
-                borderRadius: "8px",
-              }}
-            >
-              <Clock size={14} color="#059669" />
-              <div>
-                <span style={{ fontSize: "9px", fontWeight: 800, color: "#065F46", textTransform: "uppercase", display: "block", lineHeight: 1 }}>
-                  Stockouts Prevented
-                </span>
-                <span style={{ fontSize: "12.5px", fontWeight: 800, color: "#047857" }}>
-                  0 hrs <span style={{ fontSize: "10.5px", fontWeight: 600, color: "#059669" }}>vs {result.siloedStockouts}h Siloed</span>
-                </span>
-              </div>
-            </div>
-
-            {/* Units Rescued Chip */}
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "7px",
-                background: "#EFF6FF",
-                border: "1px solid #BFDBFE",
-                padding: "6px 12px",
-                borderRadius: "8px",
-              }}
-            >
-              <Award size={14} color="#2563EB" />
-              <div>
-                <span style={{ fontSize: "9px", fontWeight: 800, color: "#1E40AF", textTransform: "uppercase", display: "block", lineHeight: 1 }}>
-                  Platelets Rescued
-                </span>
-                <span style={{ fontSize: "12.5px", fontWeight: 800, color: "#1D4ED8" }}>
-                  +{displayedUnits} u <span style={{ fontSize: "10.5px", fontWeight: 600, color: "#3B82F6" }}>({result.rescuedSavingsText})</span>
-                </span>
-              </div>
-            </div>
-
-            {/* O- Buffer Chip */}
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "7px",
-                background: "#FAF5FF",
-                border: "1px solid #E9D5FF",
-                padding: "6px 12px",
-                borderRadius: "8px",
-              }}
-            >
-              <ShieldCheck size={14} color="#7C3AED" />
-              <div>
-                <span style={{ fontSize: "9px", fontWeight: 800, color: "#581C87", textTransform: "uppercase", display: "block", lineHeight: 1 }}>
-                  Universal O- Buffer
-                </span>
-                <span style={{ fontSize: "12.5px", fontWeight: 800, color: "#6D28D9" }}>
-                  {displayedPct}% <span style={{ fontSize: "10.5px", fontWeight: 600, color: "#8B5CF6" }}>Protected</span>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── MAIN CONTENT: PLAIN & SIMPLE 2-PANEL DATA SPLIT ── */}
-        <div
-          style={{
-            flex: 1,
-            display: "grid",
-            gridTemplateColumns: "1.55fr 1fr",
-            gap: "16px",
-            margin: "12px 0",
-            minHeight: 0,
-            overflow: "hidden",
-          }}
-        >
-          {/* LEFT: Autonomous Emergency Dispatches Table */}
-          <div
-            style={{
-              background: "#F8FAFC",
-              border: "1px solid #E2E8F0",
-              borderRadius: "14px",
-              padding: "14px 16px",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                <Truck size={15} color="#059669" />
-                <h4 style={{ margin: 0, fontSize: "13px", fontWeight: 800, color: "#0F172A" }}>
-                  Autonomous Emergency Dispatch Legs ({result.emergencyRoutes.length})
-                </h4>
-              </div>
-              <span style={{ fontSize: "11px", color: "#64748B", fontWeight: 600 }}>
-                Real-Time OR-Tools Solutions
-              </span>
-            </div>
-
-            {/* Clean Dispatch Strip Table */}
-            <div
-              style={{
-                flex: 1,
-                overflowY: "auto",
-                display: "flex",
-                flexDirection: "column",
-                gap: "8px",
-              }}
-            >
-              {result.emergencyRoutes.map((route) => (
-                <div
-                  key={route.id}
-                  style={{
-                    background: "#FFFFFF",
-                    border: "1px solid #E2E8F0",
-                    borderRadius: "10px",
-                    padding: "10px 14px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: "12px",
-                  }}
-                >
-                  {/* Left: Origin & Destination */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: "240px" }}>
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        fontWeight: 800,
-                        fontFamily: "monospace",
-                        color: "#475569",
-                        background: "#F1F5F9",
-                        padding: "2px 6px",
-                        borderRadius: "5px",
-                      }}
-                    >
-                      {route.id}
-                    </span>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <span
-                        style={{
-                          fontSize: "11px",
-                          fontWeight: 800,
-                          background: "#ECFDF5",
-                          color: "#065F46",
-                          border: "1px solid #A7F3D0",
-                          padding: "2px 7px",
-                          borderRadius: "5px",
-                        }}
-                      >
-                        {route.donorCode}
-                      </span>
-                      <span style={{ fontSize: "11px", color: "#94A3B8" }}>➔</span>
-                      <span
-                        style={{
-                          fontSize: "11px",
-                          fontWeight: 800,
-                          background: activeCrisisId ? "#FFF1F2" : "#EFF6FF",
-                          color: activeCrisisId ? "#BE123C" : "#1D4ED8",
-                          border: activeCrisisId ? "1px solid #FECACA" : "1px solid #BFDBFE",
-                          padding: "2px 7px",
-                          borderRadius: "5px",
-                        }}
-                      >
-                        {route.recipientCode}
-                      </span>
-                      <span style={{ fontSize: "12px", fontWeight: 700, color: "#1E293B", marginLeft: "4px" }}>
-                        {route.target_name.split(" ")[0]}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Middle: Biologic Cargo & Protocol */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1 }}>
-                    <span
-                      style={{
-                        fontSize: "11.5px",
-                        fontWeight: 800,
-                        color: "#0F172A",
-                        background: "#FEF3C7",
-                        border: "1px solid #FDE68A",
-                        padding: "2px 8px",
-                        borderRadius: "5px",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {route.cargo}
-                    </span>
-                    <span style={{ fontSize: "11px", color: "#64748B", whiteSpace: "nowrap" }}>
-                      {route.reason}
-                    </span>
-                  </div>
-
-                  {/* Right: ETA & Status */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-                    <span style={{ fontSize: "11px", fontWeight: 700, color: "#059669", fontFamily: "monospace" }}>
-                      {route.eta}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "10px",
-                        fontWeight: 700,
-                        background: "#F0FDF4",
-                        color: "#166534",
-                        border: "1px solid #BBF7D0",
-                        padding: "2px 7px",
-                        borderRadius: "999px",
-                      }}
-                    >
-                      En Route
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* RIGHT: Siloed vs Plexus Comparison & Clinical Safety Card */}
-          <div
-            style={{
-              background: "#F8FAFC",
-              border: "1px solid #E2E8F0",
-              borderRadius: "14px",
-              padding: "16px 18px",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-            }}
-          >
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "14px" }}>
-                <AlertTriangle size={15} color="#D97706" />
-                <h4 style={{ margin: 0, fontSize: "13px", fontWeight: 800, color: "#0F172A" }}>
-                  Siloed Failure vs. Plexus Mesh Resilience
-                </h4>
-              </div>
-
-              {/* Comparison Bars */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "16px" }}>
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11.5px", marginBottom: "4px" }}>
-                    <span style={{ color: "#64748B", fontWeight: 600 }}>Traditional Siloed Response</span>
-                    <span style={{ color: "#E11D48", fontWeight: 800 }}>78% Unmet Demand / Spoilage</span>
-                  </div>
-                  <div style={{ height: "8px", background: "#E2E8F0", borderRadius: "999px", overflow: "hidden" }}>
-                    <div style={{ width: "78%", height: "100%", background: "#E11D48", borderRadius: "999px" }} />
-                  </div>
-                </div>
-
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11.5px", marginBottom: "4px" }}>
-                    <span style={{ color: "#64748B", fontWeight: 600 }}>Plexus Autonomous Mesh</span>
-                    <span style={{ color: "#059669", fontWeight: 800 }}>99.2% Demand Fulfilled · 1.2% Waste</span>
-                  </div>
-                  <div style={{ height: "8px", background: "#E2E8F0", borderRadius: "999px", overflow: "hidden" }}>
-                    <div style={{ width: "99.2%", height: "100%", background: "#059669", borderRadius: "999px" }} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Key Clinical Safeguards */}
-              <div style={{ borderTop: "1px solid #E2E8F0", paddingTop: "12px" }}>
-                <span style={{ fontSize: "10px", fontWeight: 800, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: "8px" }}>
-                  Active Clinical Safeguards
-                </span>
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "11.5px", color: "#334155" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <CheckCircle2 size={13} color="#059669" />
-                    <span><strong>FEFO Expiry Rescue:</strong> Oldest viable units rerouted first</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <CheckCircle2 size={13} color="#059669" />
-                    <span><strong>Asymmetric ABO Match:</strong> Strict iso-group compatibility</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <CheckCircle2 size={13} color="#059669" />
-                    <span><strong>Green Corridor Transit:</strong> Pre-cleared arterial highway paths</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Network Latency Badge */}
-            <div
-              style={{
-                background: "#FFFFFF",
+                background: "#F8FAFC",
                 border: "1px solid #E2E8F0",
                 borderRadius: "8px",
-                padding: "8px 12px",
-                display: "flex",
+                padding: "6px 12px",
+                display: "inline-flex",
                 alignItems: "center",
-                justifyContent: "space-between",
-                marginTop: "10px",
+                gap: "5px",
+                fontSize: "11.5px",
+                fontWeight: 700,
+                color: "#475569",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
               }}
+              title="Return to 3 scenario cards"
             >
-              <span style={{ fontSize: "11px", color: "#64748B" }}>Solver Convergence:</span>
-              <span style={{ fontSize: "11px", fontWeight: 800, color: "#0F172A", fontFamily: "monospace" }}>
-                14.2ms (7,840 arcs)
-              </span>
-            </div>
-          </div>
-        </div>
+              <ChevronUp size={14} strokeWidth={2.4} />
+              <span>Back to Scenarios</span>
+            </button>
 
-        {/* ── FOOTER BAR: ACTION CONTROLS ── */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            borderTop: "1px solid #F1F5F9",
-            paddingTop: "12px",
-            flexShrink: 0,
-            flexWrap: "wrap",
-            gap: "10px",
-          }}
-        >
-          {/* Left Telemetry */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span
-              style={{
-                width: 7,
-                height: 7,
-                borderRadius: "50%",
-                background: "#059669",
-                display: "inline-block",
-              }}
-            />
-            <span style={{ fontSize: "11.5px", color: "#64748B", fontFamily: "monospace" }}>
-              Google OR-Tools Multi-Commodity Max-Flow · 25 Delhi-NCR Hospitals Synchronized
-            </span>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 800,
+                    letterSpacing: "0.08em",
+                    color: isSolving ? "#D97706" : activeCrisisId ? "#065F46" : "#2563EB",
+                    background: isSolving ? "#FEF3C7" : activeCrisisId ? "#ECFDF5" : "#EFF6FF",
+                    border: `1px solid ${isSolving ? "#FDE68A" : activeCrisisId ? "#A7F3D0" : "#BFDBFE"}`,
+                    padding: "2px 8px",
+                    borderRadius: "5px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {isSolving
+                    ? "SOLVING NETWORK ARCS..."
+                    : activeCrisisId
+                    ? "OR-TOOLS MIN-COST MAX-FLOW · CONVERGED"
+                    : "BASELINE STEADY STATE"}
+                </span>
+                <span style={{ fontSize: "11px", color: "#64748B", fontFamily: "monospace" }}>
+                  {result.bannerTelemetry}
+                </span>
+              </div>
+              <h2 style={{ margin: "2px 0 0", fontSize: "18px", fontWeight: 800, color: "#0F172A" }}>
+                {activeCrisis ? activeCrisis.label : "Baseline NCR Network Flow"}
+              </h2>
+            </div>
           </div>
 
           {/* Right Action Buttons */}
@@ -660,7 +496,7 @@ export default function SurgeTab({
                 }}
               >
                 <RotateCcw size={13} strokeWidth={2.4} />
-                <span>Stop Crisis & Reset Mesh</span>
+                <span>Reset to Baseline</span>
               </button>
             )}
 
@@ -683,9 +519,318 @@ export default function SurgeTab({
                 boxShadow: "0 2px 6px rgba(21, 153, 122, 0.25)",
               }}
             >
-              <span>Push Emergency Routes to Live Map</span>
+              <span>View Active Routes on Live Map</span>
               <ArrowRight size={13} strokeWidth={2.6} />
             </button>
+          </div>
+        </div>
+
+        {/* ── CINEMATIC FULL-SIZE ANIMATED BIO-MESH ARCHITECTURAL SVG CANVAS ── */}
+        <div
+          style={{
+            flex: 1,
+            margin: "12px 0",
+            background: "#F8FAFC",
+            borderRadius: "18px",
+            border: "1px solid #E2E8F0",
+            position: "relative",
+            overflow: "hidden",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "360px",
+          }}
+        >
+          <svg
+            key={animKey}
+            viewBox="0 0 1000 460"
+            preserveAspectRatio="xMidYMid meet"
+            style={{ width: "100%", height: "100%", maxHeight: "440px" }}
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              {/* Architectural dot grid */}
+              <pattern id="fullGrid" width="24" height="24" patternUnits="userSpaceOnUse">
+                <circle cx="3" cy="3" r="1.3" fill="#E2E8F0" />
+              </pattern>
+
+              {/* Bézier routing routes */}
+              {WIDE_VESSELS.map((v, i) => (
+                <path
+                  key={i}
+                  id={`cinematic-route-${i}`}
+                  d={wideBezierPath(v.fromX, v.fromY, v.toX, v.toY)}
+                  fill="none"
+                />
+              ))}
+            </defs>
+
+            {/* Background dot pattern */}
+            <rect width="100%" height="100%" fill="url(#fullGrid)" />
+
+            {/* Tier Column Header Guidelines */}
+            <text x="140" y="30" fill="#94A3B8" fontSize="10.5" fontWeight="800" textAnchor="middle" letterSpacing="0.08em">
+              SURPLUS DONOR HUBS (SUPPLY TIER)
+            </text>
+            <text x="500" y="30" fill="#94A3B8" fontSize="10.5" fontWeight="800" textAnchor="middle" letterSpacing="0.08em">
+              OR-TOOLS HIGHWAY ROUTING CORRIDORS (TRANSIT TIER)
+            </text>
+            <text x="860" y="30" fill="#94A3B8" fontSize="10.5" fontWeight="800" textAnchor="middle" letterSpacing="0.08em">
+              DISRUPTED SURGE HOSPITALS (DEMAND TIER)
+            </text>
+
+            {/* Curved Wide Bezier Vessels */}
+            {WIDE_VESSELS.map((v, i) => (
+              <path
+                key={i}
+                d={wideBezierPath(v.fromX, v.fromY, v.toX, v.toY)}
+                stroke="#10B981"
+                strokeWidth="2.5"
+                strokeOpacity={activeCrisisId ? "0.55" : "0.3"}
+                fill="none"
+                strokeLinecap="round"
+              />
+            ))}
+
+            {/* Floating Highway Corridor Badges */}
+            {WIDE_VESSELS.map((v, i) => (
+              <g key={`corridor-tag-${i}`} opacity={activeCrisisId ? 0.95 : 0.7}>
+                <rect
+                  x="430"
+                  y={v.tagY - 10}
+                  width="140"
+                  height="20"
+                  rx="10"
+                  fill="#FFFFFF"
+                  stroke="#CBD5E1"
+                  strokeWidth="1"
+                />
+                <text
+                  x="500"
+                  y={v.tagY + 4}
+                  textAnchor="middle"
+                  fill="#475569"
+                  fontSize="9"
+                  fontWeight="700"
+                  fontFamily="monospace"
+                >
+                  {v.label}
+                </text>
+              </g>
+            ))}
+
+            {/* Animated Glowing Packets along Wide Vessels */}
+            {WIDE_VESSELS.map((v, i) => (
+              <g key={`pkt-${i}`}>
+                {/* Outer Glow Halo */}
+                <circle r="8" fill="#10B981" opacity="0.25">
+                  <animateMotion dur={activeCrisisId ? "2.2s" : "3.0s"} repeatCount="indefinite" begin={v.delay}>
+                    <mpath href={`#cinematic-route-${i}`} />
+                  </animateMotion>
+                </circle>
+                {/* Core Packet */}
+                <circle r="4.5" fill="#059669" opacity="0.95" stroke="#FFFFFF" strokeWidth="1.5">
+                  <animateMotion dur={activeCrisisId ? "2.2s" : "3.0s"} repeatCount="indefinite" begin={v.delay}>
+                    <mpath href={`#cinematic-route-${i}`} />
+                  </animateMotion>
+                </circle>
+              </g>
+            ))}
+
+            {/* ── LEFT: 4 Surplus Donor Hubs (Generously Proportioned) ── */}
+            {DONOR_NODES.map((n) => (
+              <g key={n.id}>
+                {/* Donor Card Pill */}
+                <rect
+                  x={n.pillX}
+                  y={n.y - 18}
+                  width="145"
+                  height="36"
+                  rx="18"
+                  fill="#FFFFFF"
+                  stroke="#A7F3D0"
+                  strokeWidth="1.5"
+                />
+                <text
+                  x={n.pillX + 12}
+                  y={n.y - 1}
+                  fill="#065F46"
+                  fontSize="12"
+                  fontWeight="800"
+                >
+                  {n.name}
+                </text>
+                <text
+                  x={n.pillX + 12}
+                  y={n.y + 12}
+                  fill="#64748B"
+                  fontSize="9"
+                  fontWeight="600"
+                >
+                  {n.sub}
+                </text>
+
+                {/* Left Circle Node */}
+                <circle cx={n.circleX} cy={n.y} r="18" fill="#10B981" stroke="#FFFFFF" strokeWidth="2.5" />
+                <text
+                  x={n.circleX}
+                  y={n.y + 4.5}
+                  textAnchor="middle"
+                  fill="#FFFFFF"
+                  fontSize="9.5"
+                  fontWeight="800"
+                >
+                  {n.id}
+                </text>
+
+                {/* Outbound Connector Dot */}
+                <circle cx="230" cy={n.y} r="4.5" fill="#10B981" />
+              </g>
+            ))}
+
+            {/* ── RIGHT: 3 Deficit Crisis Nodes (Pulsing Radar Waves) ── */}
+            {CRISIS_NODES.map((n, ni) => {
+              const accent = ni === 0 ? "#E11D48" : ni === 1 ? "#D97706" : "#0284C7";
+              return (
+                <g key={n.id}>
+                  {/* Inbound Connector Dot */}
+                  <circle cx="765" cy={n.y} r="4.5" fill={accent} />
+
+                  {/* Pulsing Radar Wave 1 */}
+                  <circle cx={n.circleX} cy={n.y} r="30" fill="none" stroke={accent} strokeWidth="1.5" opacity="0">
+                    <animate
+                      attributeName="r"
+                      from="20"
+                      to="42"
+                      dur="1.8s"
+                      repeatCount="indefinite"
+                      begin={`${ni * 0.4}s`}
+                    />
+                    <animate
+                      attributeName="opacity"
+                      from="0.65"
+                      to="0"
+                      dur="1.8s"
+                      repeatCount="indefinite"
+                      begin={`${ni * 0.4}s`}
+                    />
+                  </circle>
+                  {/* Pulsing Radar Wave 2 */}
+                  <circle cx={n.circleX} cy={n.y} r="22" fill="none" stroke={accent} strokeWidth="1.8" opacity="0">
+                    <animate
+                      attributeName="r"
+                      from="16"
+                      to="28"
+                      dur="1.8s"
+                      repeatCount="indefinite"
+                      begin={`${ni * 0.4 + 0.3}s`}
+                    />
+                    <animate
+                      attributeName="opacity"
+                      from="0.75"
+                      to="0"
+                      dur="1.8s"
+                      repeatCount="indefinite"
+                      begin={`${ni * 0.4 + 0.3}s`}
+                    />
+                  </circle>
+
+                  {/* Crisis Card Pill */}
+                  <rect
+                    x={n.pillX}
+                    y={n.y - 18}
+                    width="155"
+                    height="36"
+                    rx="18"
+                    fill="#FFFFFF"
+                    stroke={`${accent}55`}
+                    strokeWidth="1.5"
+                  />
+                  <text
+                    x={n.pillX + 14}
+                    y={n.y - 1}
+                    fill="#111827"
+                    fontSize="12"
+                    fontWeight="800"
+                  >
+                    {n.name}
+                  </text>
+                  <text
+                    x={n.pillX + 14}
+                    y={n.y + 12}
+                    fill={accent}
+                    fontSize="9.5"
+                    fontWeight="700"
+                  >
+                    {activeCrisisId ? "Active Shock · Restocking" : "Target Node · Steady"}
+                  </text>
+
+                  {/* Right Circle Node */}
+                  <circle cx={n.circleX} cy={n.y} r="18" fill={accent} stroke="#FFFFFF" strokeWidth="2.5" />
+                  <text
+                    x={n.circleX}
+                    y={n.y + 4.5}
+                    textAnchor="middle"
+                    fill="#FFFFFF"
+                    fontSize="9.5"
+                    fontWeight="800"
+                  >
+                    {n.id}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+
+        {/* ── BOTTOM METRICS & TELEMETRY STRIP ── */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderTop: "1px solid #F1F5F9",
+            paddingTop: "12px",
+            flexShrink: 0,
+            flexWrap: "wrap",
+            gap: "10px",
+          }}
+        >
+          {/* Left Telemetry */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: "50%",
+                background: "#059669",
+                display: "inline-block",
+              }}
+            />
+            <span style={{ fontSize: "11.5px", color: "#64748B", fontFamily: "monospace" }}>
+              7,840 Network Arcs Evaluated · Google OR-Tools Min-Cost Max-Flow · Zero Unmet Demand
+            </span>
+          </div>
+
+          {/* Right: 3 Key Metrics */}
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "11.5px" }}>
+              <Clock size={13} color="#059669" />
+              <span style={{ color: "#64748B" }}>Stockouts:</span>
+              <strong style={{ color: "#047857" }}>0 hrs</strong>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "11.5px" }}>
+              <Award size={13} color="#2563EB" />
+              <span style={{ color: "#64748B" }}>Rescued:</span>
+              <strong style={{ color: "#1D4ED8" }}>+{displayedUnits}u</strong>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "11.5px" }}>
+              <ShieldCheck size={13} color="#7C3AED" />
+              <span style={{ color: "#64748B" }}>Buffer:</span>
+              <strong style={{ color: "#6D28D9" }}>{displayedPct}%</strong>
+            </div>
           </div>
         </div>
       </div>
