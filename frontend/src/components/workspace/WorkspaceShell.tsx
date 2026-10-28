@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { ScenarioKey, TickState, TransferOrder, TransferRequestInput, TransferStatus, BloodType, HospitalNode } from "../../types";
 import { CRISIS_SCENARIOS } from "../../lib/crisisData";
+import { NCR_HOSPITAL_METAS } from "../../lib/hospitalTelemetry";
 import { createTransferRequest, fetchState, injectChaos, setTransferStatus, tick } from "../../api";
 import type { WorkspaceTab } from "../../App";
 import MedisoDashboardTab from "./MedisoDashboardTab";
@@ -25,44 +26,20 @@ interface WorkspaceShellProps {
 
 // 25 Delhi-NCR realistic hospital baseline nodes
 export function createDefaultHospitalNodes(): HospitalNode[] {
-  const configs = [
-    { id: "ND-01", name: "AIIMS Trauma Center", zone: "Central Delhi", lat: 28.567, lng: 77.209, stock: 96, netBal: -14 },
-    { id: "ND-02", name: "Safdarjung Hospital", zone: "South Delhi", lat: 28.552, lng: 77.195, stock: 85, netBal: -12 },
-    { id: "ND-03", name: "Max Super Saket", zone: "South Delhi", lat: 28.530, lng: 77.214, stock: 106, netBal: 12 },
-    { id: "ND-04", name: "Fortis Hospital Noida", zone: "Noida Sec-62", lat: 28.620, lng: 77.330, stock: 93, netBal: 24 },
-    { id: "ND-05", name: "Medanta The Medicity", zone: "Gurugram NH-48", lat: 28.535, lng: 77.118, stock: 135, netBal: 18 },
-    { id: "ND-06", name: "Fortis Escorts Okhla", zone: "South Delhi", lat: 28.560, lng: 77.278, stock: 72, netBal: -8 },
-    { id: "ND-07", name: "GTB Hospital East Delhi", zone: "East Delhi", lat: 28.665, lng: 77.309, stock: 68, netBal: -18 },
-    { id: "ND-08", name: "Dr. RML Hospital", zone: "Central Delhi", lat: 28.625, lng: 77.202, stock: 102, netBal: 4 },
-    { id: "ND-09", name: "Lok Nayak LNJP", zone: "Central Delhi", lat: 28.636, lng: 77.239, stock: 88, netBal: -8 },
-    { id: "ND-10", name: "Sir Ganga Ram Hospital", zone: "Old Rajinder", lat: 28.618, lng: 77.189, stock: 94, netBal: 4 },
-    { id: "ND-11", name: "Apollo Hospital Sarita", zone: "South Delhi", lat: 28.540, lng: 77.284, stock: 112, netBal: 22 },
-    { id: "ND-12", name: "Rajiv Gandhi Super", zone: "East Delhi", lat: 28.660, lng: 77.318, stock: 65, netBal: -16 },
-    { id: "ND-13", name: "Fortis Vasant Kunj", zone: "South Delhi", lat: 28.532, lng: 77.156, stock: 82, netBal: 8 },
-    { id: "ND-14", name: "BLK-Max Super Specialty", zone: "Central Delhi", lat: 28.622, lng: 77.181, stock: 91, netBal: 2 },
-    { id: "ND-15", name: "Manipal Hospital Dwarka", zone: "West Delhi", lat: 28.580, lng: 77.110, stock: 89, netBal: 5 },
-    { id: "ND-16", name: "St. Stephens Tis Hazari", zone: "North Delhi", lat: 28.655, lng: 77.217, stock: 74, netBal: 3 },
-    { id: "ND-17", name: "Saroj Hospital Rohini", zone: "North Delhi", lat: 28.665, lng: 77.135, stock: 61, netBal: -15 },
-    { id: "ND-18", name: "Venkateshwar Dwarka", zone: "West Delhi", lat: 28.565, lng: 77.112, stock: 77, netBal: 6 },
-    { id: "ND-19", name: "Paras Health Sector 43", zone: "Gurugram", lat: 28.530, lng: 77.140, stock: 83, netBal: 11 },
-    { id: "ND-20", name: "Jaypee Hospital Noida", zone: "Noida Sec-128", lat: 28.545, lng: 77.330, stock: 95, netBal: 16 },
-    { id: "ND-21", name: "DDU Hospital Hari Nagar", zone: "West Delhi", lat: 28.615, lng: 77.125, stock: 69, netBal: -11 },
-    { id: "ND-22", name: "Sanjay Gandhi Mangolpuri", zone: "North Delhi", lat: 28.660, lng: 77.120, stock: 58, netBal: -20 },
-    { id: "ND-23", name: "Artemis Hospital Sector 51", zone: "Gurugram", lat: 28.538, lng: 77.130, stock: 104, netBal: 15 },
-    { id: "ND-24", name: "Max Super Patparganj", zone: "East Delhi", lat: 28.630, lng: 77.304, stock: 86, netBal: 7 },
-    { id: "ND-25", name: "Holy Family Okhla", zone: "South Delhi", lat: 28.548, lng: 77.273, stock: 79, netBal: 4 },
-  ];
+  return Object.entries(NCR_HOSPITAL_METAS).map(([id, meta]) => {
+    const s = meta.baselineStock;
+    const isTrauma = meta.isTrauma;
+    const targetBaseline = meta.targetBaseline;
+    const netBal = s - targetBaseline;
 
-  return configs.map((c) => {
-    const s = c.stock;
     const oPos = Math.max(8, Math.round(s * 0.35));
-    const oNeg = Math.max(1, Math.round(s * 0.06));
-    const aPos = Math.max(6, Math.round(s * 0.23));
+    const oNeg = Math.max(1, Math.round(s * 0.05));
+    const aPos = Math.max(6, Math.round(s * 0.22));
     const aNeg = Math.max(1, Math.round(s * 0.04));
-    const bPos = Math.max(5, Math.round(s * 0.21));
-    const bNeg = Math.max(1, Math.round(s * 0.04));
-    const abPos = Math.max(2, Math.round(s * 0.06));
-    const abNeg = Math.max(0, Math.round(s * 0.01));
+    const bPos = Math.max(5, Math.round(s * 0.20));
+    const bNeg = Math.max(1, Math.round(s * 0.03));
+    const abPos = Math.max(2, Math.round(s * 0.09));
+    const abNeg = Math.max(0, s - (oPos + oNeg + aPos + aNeg + bPos + bNeg + abPos));
 
     const inv: Record<string, Record<string, number>> = {
       "O+": { "1": Math.round(oPos * 0.2), "2": Math.round(oPos * 0.2), "3": Math.round(oPos * 0.2), "4": Math.round(oPos * 0.2), "5": oPos - 4 * Math.round(oPos * 0.2) },
@@ -76,16 +53,16 @@ export function createDefaultHospitalNodes(): HospitalNode[] {
     };
 
     return {
-      id: c.id,
-      name: c.name,
-      zone: c.zone,
-      lat: c.lat,
-      lng: c.lng,
-      trauma_level: c.stock < 80 ? 3 : 2,
+      id,
+      name: meta.fullName,
+      zone: meta.zone,
+      lat: meta.coords[1],
+      lng: meta.coords[0],
+      trauma_level: isTrauma ? 2 : 1,
       active_surge_type: "NONE",
       inventory_by_blood_and_age: inv,
-      demand_forecast_24h: { "O+": 25, "O-": 6, "A+": 16, "A-": 4, "B+": 12, "B-": 3, "AB+": 4, "AB-": 1 },
-      net_balance: c.netBal,
+      demand_forecast_24h: { "O+": Math.round(targetBaseline * 0.35), "O-": 4, "A+": 16, "A-": 3, "B+": 14, "B-": 2, "AB+": 5, "AB-": 1 },
+      net_balance: netBal,
     };
   });
 }
@@ -514,6 +491,109 @@ export default function WorkspaceShell({ initialTab, initialScenario, onExit }: 
     }).catch(() => {});
   }, [state?.nodes]);
 
+  const handleDirectMapDispatch = useCallback((targetHospitalId: string, requestedUnits = 16) => {
+    const currentNodes = Array.isArray(state?.nodes) && state.nodes.length > 0 ? state.nodes : createDefaultHospitalNodes();
+    const recipient = currentNodes.find((n) => n.id === targetHospitalId);
+    if (!recipient) return;
+
+    // Pick top surplus donor (N62, MDT, MAX, NBV, NH4) that is not the recipient
+    const donorCandidates = ["ND-04", "ND-05", "ND-03", "ND-20", "ND-23"].filter((id) => id !== targetHospitalId);
+    let donorNode = currentNodes.find((n) => n.id === donorCandidates[0]);
+    for (const dId of donorCandidates) {
+      const candidate = currentNodes.find((n) => n.id === dId);
+      if (candidate && (candidate.net_balance > (donorNode?.net_balance || 0))) {
+        donorNode = candidate;
+      }
+    }
+    const donorId = donorNode?.id || donorCandidates[0];
+
+    const donorMeta = NCR_HOSPITAL_METAS[donorId] || { code: donorId, short: donorId, fullName: donorId, zone: "Surplus Hub" };
+    const recipientMeta = NCR_HOSPITAL_METAS[targetHospitalId] || { code: recipient.name.slice(0, 3).toUpperCase(), short: recipient.name, fullName: recipient.name, zone: "Critical Ward" };
+
+    const newTx: TransferOrder = {
+      id: `#TX-${Math.floor(1060 + Math.random() * 40)}`,
+      source_id: donorId,
+      source_name: donorMeta.fullName,
+      source_zone: donorMeta.zone || "Surplus Hub",
+      target_id: targetHospitalId,
+      target_name: recipientMeta.fullName,
+      target_zone: recipientMeta.zone || "Critical Ward",
+      donor_blood: "O+",
+      recipient_blood: "O+",
+      units: requestedUnits,
+      distance_km: 18.2,
+      eta_mins: 18,
+      cooler_temp_c: 21.9,
+      age_hours: 22,
+      remaining_hours: 50,
+      status: "APPROVED" as TransferStatus,
+      origin: "MANUAL" as const,
+      urgency: "CRITICAL" as const,
+      reason_text: `Emergency cold-chain transfer from ${donorMeta.short} to stabilize ${recipientMeta.short}`,
+      created_at: "Just now",
+    };
+
+    setState((prev) => {
+      const prevNodes = Array.isArray(prev?.nodes) && prev.nodes.length > 0 ? prev.nodes : createDefaultHospitalNodes();
+      const updatedNodes = prevNodes.map((n) => {
+        if (n.id === donorId) {
+          const inv = { ...(n.inventory_by_blood_and_age || {}) };
+          const bInv = { ...(inv["O+"] || {}) };
+          let rem = requestedUnits;
+          for (const k of Object.keys(bInv)) {
+            const cur = Number(bInv[k]) || 0;
+            if (cur > 0) {
+              const take = Math.min(rem, cur);
+              bInv[k] = cur - take;
+              rem -= take;
+              if (rem <= 0) break;
+            }
+          }
+          if (rem > 0 && bInv["1"] !== undefined) {
+            bInv["1"] = Math.max(0, (Number(bInv["1"]) || 0) - rem);
+          }
+          inv["O+"] = bInv;
+          return {
+            ...n,
+            inventory_by_blood_and_age: inv,
+            net_balance: (n.net_balance || 0) - requestedUnits,
+          };
+        }
+
+        if (n.id === targetHospitalId) {
+          const inv = { ...(n.inventory_by_blood_and_age || {}) };
+          const bInv = { ...(inv["O+"] || {}) };
+          bInv["4"] = (Number(bInv["4"]) || 0) + requestedUnits;
+          inv["O+"] = bInv;
+          return {
+            ...n,
+            inventory_by_blood_and_age: inv,
+            net_balance: (n.net_balance || 0) + requestedUnits,
+          };
+        }
+
+        return n;
+      });
+
+      return {
+        ...prev,
+        nodes: updatedNodes,
+        transfers: [newTx, ...prev.transfers],
+      };
+    });
+
+    showToast(`✓ +${requestedUnits}u Dispatched & Stabilized: ${donorMeta.code} → ${recipientMeta.code}`);
+
+    createTransferRequest({
+      target_id: targetHospitalId,
+      source_id: donorId,
+      blood: "O+",
+      units: requestedUnits,
+      urgency: "CRITICAL",
+    }).catch(() => {});
+  }, [state?.nodes]);
+
+
   const handleStatusChange = useCallback(async (txId: string, status: TransferStatus) => {
     setState((prev) => {
       const cleanTxId = txId.startsWith("#") ? txId : `#${txId}`;
@@ -731,6 +811,7 @@ export default function WorkspaceShell({ initialTab, initialScenario, onExit }: 
             activeCrisisId={activeCrisisId}
             onStopCrisis={handleStopScenario}
             onSelectHospital={setSelectedHospitalId}
+            onDirectDispatch={handleDirectMapDispatch}
             onOpenDispatch={(id) => {
               setSelectedHospitalId(id);
               setTab("dashboard");

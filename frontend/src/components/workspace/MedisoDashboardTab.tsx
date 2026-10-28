@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import type { TickState, TransferRequestInput, TransferStatus, BloodType } from "../../types";
 import { formatNumber } from "../../lib/blood";
+import { recalculateHospitalTelemetry } from "../../lib/hospitalTelemetry";
 
 interface MedisoDashboardTabProps {
   state: TickState;
@@ -36,33 +37,33 @@ interface MedisoDashboardTabProps {
   loadingStep?: boolean;
 }
 
-// 25 Verified Delhi-NCR Hospitals with clean concise names
+// 25 Verified Delhi-NCR Hospitals calibrated to baseline steady-state
 const NCR_HOSPITALS = [
-  { id: "ND-01", codeId: "#ND-260101", code: "AIM", name: "AIIMS Trauma Center", zone: "Central Delhi", stock: 96, oPos: 34, oNeg: 8, status: "Shortage" },
-  { id: "ND-02", codeId: "#ND-260102", code: "SFD", name: "Safdarjung Hospital", zone: "South Delhi", stock: 119, oPos: 42, oNeg: 12, status: "Optimal" },
-  { id: "ND-03", codeId: "#ND-260103", code: "MAX", name: "Max Super Saket", zone: "South Delhi", stock: 106, oPos: 38, oNeg: 9, status: "<36h Surplus" },
-  { id: "ND-04", codeId: "#ND-260104", code: "N62", name: "Fortis Hospital Noida", zone: "Noida Sec-62", stock: 93, oPos: 32, oNeg: 6, status: "<36h Surplus" },
-  { id: "ND-05", codeId: "#ND-260105", code: "MDT", name: "Medanta The Medicity", zone: "Gurugram NH-48", stock: 135, oPos: 48, oNeg: 14, status: "Optimal" },
-  { id: "ND-06", codeId: "#ND-260106", code: "FTN", name: "Fortis Escorts Okhla", zone: "South Delhi", stock: 72, oPos: 24, oNeg: 5, status: "<36h Surplus" },
-  { id: "ND-07", codeId: "#ND-260107", code: "GTB", name: "GTB Hospital East Delhi", zone: "East Delhi", stock: 68, oPos: 21, oNeg: 3, status: "Shortage" },
-  { id: "ND-08", codeId: "#ND-260108", code: "RML", name: "Dr. RML Hospital", zone: "Central Delhi", stock: 102, oPos: 36, oNeg: 10, status: "Optimal" },
-  { id: "ND-09", codeId: "#ND-260109", code: "LNJ", name: "Lok Nayak LNJP", zone: "Central Delhi", stock: 88, oPos: 30, oNeg: 7, status: "Optimal" },
-  { id: "ND-10", codeId: "#ND-260110", code: "SGR", name: "Sir Ganga Ram Hospital", zone: "Old Rajinder", stock: 94, oPos: 32, oNeg: 8, status: "<36h Surplus" },
-  { id: "ND-11", codeId: "#ND-260111", code: "APL", name: "Apollo Hospital Sarita", zone: "South Delhi", stock: 112, oPos: 40, oNeg: 11, status: "Optimal" },
-  { id: "ND-12", codeId: "#ND-260112", code: "RGV", name: "Rajiv Gandhi Super", zone: "East Delhi", stock: 65, oPos: 20, oNeg: 4, status: "Shortage" },
-  { id: "ND-13", codeId: "#ND-260113", code: "FSB", name: "Fortis Vasant Kunj", zone: "South Delhi", stock: 82, oPos: 26, oNeg: 6, status: "Optimal" },
-  { id: "ND-14", codeId: "#ND-260114", code: "BLK", name: "BLK-Max Super Specialty", zone: "Central Delhi", stock: 91, oPos: 31, oNeg: 7, status: "Optimal" },
-  { id: "ND-15", codeId: "#ND-260115", code: "MPD", name: "Manipal Hospital Dwarka", zone: "West Delhi", stock: 89, oPos: 29, oNeg: 8, status: "<36h Surplus" },
-  { id: "ND-16", codeId: "#ND-260116", code: "STP", name: "St. Stephens Tis Hazari", zone: "North Delhi", stock: 74, oPos: 23, oNeg: 5, status: "Optimal" },
-  { id: "ND-17", codeId: "#ND-260117", code: "ROH", name: "Saroj Hospital Rohini", zone: "North Delhi", stock: 61, oPos: 18, oNeg: 3, status: "Shortage" },
-  { id: "ND-18", codeId: "#ND-260118", code: "DWK", name: "Venkateshwar Dwarka", zone: "West Delhi", stock: 77, oPos: 25, oNeg: 6, status: "Optimal" },
-  { id: "ND-19", codeId: "#ND-260119", code: "GCH", name: "Paras Health Sector 43", zone: "Gurugram", stock: 83, oPos: 27, oNeg: 7, status: "Optimal" },
-  { id: "ND-20", codeId: "#ND-260120", code: "NBV", name: "Jaypee Hospital Noida", zone: "Noida Sec-128", stock: 95, oPos: 33, oNeg: 9, status: "<36h Surplus" },
-  { id: "ND-21", codeId: "#ND-260121", code: "DRB", name: "DDU Hospital Hari Nagar", zone: "West Delhi", stock: 69, oPos: 22, oNeg: 4, status: "Shortage" },
-  { id: "ND-22", codeId: "#ND-260122", code: "SDP", name: "Sanjay Gandhi Mangolpuri", zone: "North Delhi", stock: 58, oPos: 17, oNeg: 2, status: "Shortage" },
-  { id: "ND-23", codeId: "#ND-260123", code: "NH4", name: "Artemis Hospital Sector 51", zone: "Gurugram", stock: 104, oPos: 37, oNeg: 10, status: "Optimal" },
-  { id: "ND-24", codeId: "#ND-260124", code: "MXP", name: "Max Super Patparganj", zone: "East Delhi", stock: 86, oPos: 28, oNeg: 6, status: "<36h Surplus" },
-  { id: "ND-25", codeId: "#ND-260125", code: "PRS", name: "Holy Family Okhla", zone: "South Delhi", stock: 79, oPos: 26, oNeg: 7, status: "Optimal" },
+  { id: "ND-01", codeId: "#ND-260101", code: "AIM", name: "AIIMS Trauma Center", zone: "Central Delhi", stock: 72, oPos: 25, oNeg: 4, status: "Shortage" },
+  { id: "ND-02", codeId: "#ND-260102", code: "SFD", name: "Safdarjung Hospital", zone: "South Delhi", stock: 49, oPos: 17, oNeg: 2, status: "Shortage" },
+  { id: "ND-03", codeId: "#ND-260103", code: "MAX", name: "Max Super Saket", zone: "South Delhi", stock: 112, oPos: 39, oNeg: 7, status: "<36h Surplus" },
+  { id: "ND-04", codeId: "#ND-260104", code: "N62", name: "Fortis Hospital Noida", zone: "Noida Sec-62", stock: 93, oPos: 33, oNeg: 5, status: "<36h Surplus" },
+  { id: "ND-05", codeId: "#ND-260105", code: "MDT", name: "Medanta The Medicity", zone: "Gurugram NH-48", stock: 135, oPos: 47, oNeg: 8, status: "<36h Surplus" },
+  { id: "ND-06", codeId: "#ND-260106", code: "FTN", name: "Fortis Escorts Okhla", zone: "South Delhi", stock: 68, oPos: 24, oNeg: 3, status: "Optimal" },
+  { id: "ND-07", codeId: "#ND-260107", code: "GTB", name: "GTB Hospital East Delhi", zone: "East Delhi", stock: 68, oPos: 24, oNeg: 3, status: "Shortage" },
+  { id: "ND-08", codeId: "#ND-260108", code: "RML", name: "Dr. RML Hospital", zone: "Central Delhi", stock: 88, oPos: 31, oNeg: 4, status: "Optimal" },
+  { id: "ND-09", codeId: "#ND-260109", code: "LNJ", name: "Lok Nayak LNJP", zone: "Central Delhi", stock: 70, oPos: 25, oNeg: 3, status: "Shortage" },
+  { id: "ND-10", codeId: "#ND-260110", code: "SGR", name: "Sir Ganga Ram Hospital", zone: "Old Rajinder", stock: 64, oPos: 22, oNeg: 3, status: "Optimal" },
+  { id: "ND-11", codeId: "#ND-260111", code: "APL", name: "Apollo Hospital Sarita", zone: "South Delhi", stock: 82, oPos: 29, oNeg: 4, status: "Optimal" },
+  { id: "ND-12", codeId: "#ND-260112", code: "RGV", name: "Rajiv Gandhi Super", zone: "East Delhi", stock: 52, oPos: 18, oNeg: 3, status: "Shortage" },
+  { id: "ND-13", codeId: "#ND-260113", code: "FSB", name: "Fortis Vasant Kunj", zone: "South Delhi", stock: 65, oPos: 23, oNeg: 3, status: "Optimal" },
+  { id: "ND-14", codeId: "#ND-260114", code: "BLK", name: "BLK-Max Super Specialty", zone: "Central Delhi", stock: 62, oPos: 22, oNeg: 3, status: "Optimal" },
+  { id: "ND-15", codeId: "#ND-260115", code: "MPD", name: "Manipal Hospital Dwarka", zone: "West Delhi", stock: 65, oPos: 23, oNeg: 3, status: "Optimal" },
+  { id: "ND-16", codeId: "#ND-260116", code: "STP", name: "St. Stephens Tis Hazari", zone: "North Delhi", stock: 63, oPos: 22, oNeg: 3, status: "Optimal" },
+  { id: "ND-17", codeId: "#ND-260117", code: "ROH", name: "Saroj Hospital Rohini", zone: "North Delhi", stock: 58, oPos: 20, oNeg: 3, status: "Optimal" },
+  { id: "ND-18", codeId: "#ND-260118", code: "DWK", name: "Venkateshwar Dwarka", zone: "West Delhi", stock: 66, oPos: 23, oNeg: 3, status: "Optimal" },
+  { id: "ND-19", codeId: "#ND-260119", code: "GCH", name: "Paras Health Sector 43", zone: "Gurugram", stock: 68, oPos: 24, oNeg: 3, status: "Optimal" },
+  { id: "ND-20", codeId: "#ND-260120", code: "NBV", name: "Jaypee Hospital Noida", zone: "Noida Sec-128", stock: 95, oPos: 33, oNeg: 5, status: "<36h Surplus" },
+  { id: "ND-21", codeId: "#ND-260121", code: "DRB", name: "DDU Hospital Hari Nagar", zone: "West Delhi", stock: 62, oPos: 22, oNeg: 3, status: "Optimal" },
+  { id: "ND-22", codeId: "#ND-260122", code: "SDP", name: "Sanjay Gandhi Mangolpuri", zone: "North Delhi", stock: 58, oPos: 20, oNeg: 3, status: "Optimal" },
+  { id: "ND-23", codeId: "#ND-260123", code: "NH4", name: "Artemis Hospital Sector 51", zone: "Gurugram", stock: 104, oPos: 36, oNeg: 6, status: "<36h Surplus" },
+  { id: "ND-24", codeId: "#ND-260124", code: "MXP", name: "Max Super Patparganj", zone: "East Delhi", stock: 67, oPos: 23, oNeg: 3, status: "Optimal" },
+  { id: "ND-25", codeId: "#ND-260125", code: "PRS", name: "Holy Family Okhla", zone: "South Delhi", stock: 64, oPos: 22, oNeg: 3, status: "Optimal" },
 ];
 
 // Clean varied transfers with concise donor & recipient names
@@ -256,41 +257,24 @@ export default function MedisoDashboardTab({
     const liveNodes = Array.isArray(state?.nodes) && state.nodes.length > 0 ? state.nodes : [];
     return NCR_HOSPITALS.map((h) => {
       const live = liveNodes.find((n) => n && n.id === h.id);
+      const telemetry = recalculateHospitalTelemetry(h.id, live);
       const inv = live?.inventory_by_blood_and_age;
-      
-      const stock = inv
-        ? Object.values(inv).reduce(
-            (s, b) => s + (b ? Object.values(b).reduce((acc, v) => acc + (Number(v) || 0), 0) : 0),
-            0
-          )
-        : h.stock;
 
       const oPos = inv?.["O+"]
         ? Object.values(inv["O+"]).reduce((s, v) => s + (Number(v) || 0), 0)
-        : Math.max(1, Math.round(stock * 0.35));
+        : Math.max(1, Math.round(telemetry.totalStock * 0.35));
 
       const oNeg = inv?.["O-"]
         ? Object.values(inv["O-"]).reduce((s, v) => s + (Number(v) || 0), 0)
-        : Math.max(1, Math.round(stock * 0.08));
-
-      const netBal = live ? live.net_balance : (h.status === "Shortage" ? -14 : 10);
-
-      let status: "Optimal" | "<36h Surplus" | "Shortage" = "Optimal";
-      if (stock < 85 || netBal < -30) {
-        status = "Shortage";
-      } else if (stock >= 125 || netBal > 15) {
-        status = "<36h Surplus";
-      } else {
-        status = "Optimal";
-      }
+        : Math.max(1, Math.round(telemetry.totalStock * 0.08));
 
       return {
         ...h,
-        stock,
-        netBalance: netBal,
+        stock: telemetry.totalStock,
+        netBalance: telemetry.netBalance,
         oPos,
         oNeg,
-        status,
+        status: telemetry.status,
         name: h.name,
       };
     });
