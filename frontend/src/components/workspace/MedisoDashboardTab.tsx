@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import type { TickState, TransferRequestInput, TransferStatus, BloodType } from "../../types";
 import { formatNumber } from "../../lib/blood";
-import { recalculateHospitalTelemetry } from "../../lib/hospitalTelemetry";
+import { recalculateHospitalTelemetry, findOptimalDonorHub } from "../../lib/hospitalTelemetry";
 
 interface MedisoDashboardTabProps {
   state: TickState;
@@ -209,13 +209,15 @@ export default function MedisoDashboardTab({
   const [quickUnits, setQuickUnits] = useState<number>(8);
 
   const matchedDonor = useMemo(() => {
-    if (quickRecipient === "ND-04") return { id: "ND-05", name: "Medanta Gurugram", eta: "28m", km: "24.2" };
-    if (quickRecipient === "ND-07") return { id: "ND-04", name: "Fortis Hospital Noida", eta: "18m", km: "11.4" };
-    if (quickRecipient === "ND-01") return { id: "ND-04", name: "Fortis Hospital Noida", eta: "22m", km: "18.2" };
-    if (quickRecipient === "ND-02") return { id: "ND-03", name: "Max Super Saket", eta: "14m", km: "7.8" };
-    if (quickRecipient === "ND-05") return { id: "ND-11", name: "Apollo Hospital Sarita", eta: "20m", km: "16.4" };
-    return { id: "ND-04", name: "Fortis Hospital Noida", eta: "22m", km: "18.2" };
-  }, [quickRecipient]);
+    const result = findOptimalDonorHub(quickRecipient, quickBlood, state?.nodes);
+    return {
+      id: result.id,
+      name: result.fullName,
+      code: result.code,
+      eta: `${result.etaMins}m`,
+      km: `${result.distanceKm}`,
+    };
+  }, [quickRecipient, quickBlood, state?.nodes]);
 
   // Merge state transfers or use crisp fallback (guarded against any undefined properties)
   const transferList = useMemo(() => {

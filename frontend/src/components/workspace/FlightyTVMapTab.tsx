@@ -85,23 +85,15 @@ const HOSPITAL_REGISTRY: any = NCR_HOSPITAL_METAS;
 
 
 
-// 5 Primary Arterial Express Highway Corridors across Delhi-NCR (Never cluttered stringy spaghetti!)
-
+// 6 Distinct Arterial Express Highway Corridors across Delhi-NCR (Varied Donor Hubs!)
 const PRIMARY_EXPRESS_CORRIDORS = [
-
-  { source: "ND-04", target: "ND-01", blood: "O+", units: 8, name: "Trans-Yamuna DND Express Corridor" },   // Fortis Noida -> AIIMS
-
-  { source: "ND-05", target: "ND-07", blood: "O-", units: 6, name: "NH-48 / Central Arterial Corridor" },     // Medanta Hub -> GTB
-
-  { source: "ND-11", target: "ND-09", blood: "A+", units: 12, name: "Mathura Road / Civil Services Link" },  // Apollo Sarita -> Lok Nayak
-
-  { source: "ND-03", target: "ND-02", blood: "B+", units: 6, name: "South Delhi Trauma Arterial" },          // Max Saket -> Safdarjung
-
-  { source: "ND-14", target: "ND-17", blood: "O+", units: 6, name: "Outer Ring Road Express Corridor" },     // BLK-Max -> Saroj Rohini
-
+  { source: "ND-03", target: "ND-01", blood: "O+", units: 8, name: "South Delhi Apex Arterial (Max Saket to AIIMS)" },
+  { source: "ND-04", target: "ND-07", blood: "O+", units: 8, name: "Trans-Yamuna Expressway (Fortis Noida to GTB)" },
+  { source: "ND-05", target: "ND-18", blood: "B+", units: 8, name: "Dwarka Expressway Corridor (Medanta to Venkateshwar)" },
+  { source: "ND-11", target: "ND-09", blood: "A+", units: 12, name: "Mathura Road Corridor (Apollo Sarita to Lok Nayak)" },
+  { source: "ND-23", target: "ND-19", blood: "AB+", units: 6, name: "Gurugram Supercluster Arterial (Artemis to Paras)" },
+  { source: "ND-14", target: "ND-10", blood: "O+", units: 6, name: "Central Delhi Arterial (BLK-Max to Ganga Ram)" },
 ];
-
-
 
 export default function FlightyTVMapTab({
 

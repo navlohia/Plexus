@@ -1,8 +1,8 @@
 /**
  * delhiRoadCorridors.ts
  * High-precision Delhi-NCR Highway Corridors & Arterial Road Routing
- * Guarantees all routes strictly stay within NCR map viewport bounds (lat: 28.50 - 28.645, lng: 77.06 - 77.365)
- * and follow realistic arterial corridors (Barapullah, NH-48, Ring Road, DND Flyway).
+ * Guarantees all routes strictly stay within NCR map viewport bounds (lat: 28.502 - 28.645, lng: 77.060 - 77.365)
+ * and follow realistic arterial corridors (Barapullah, NH-48, Ring Road, DND Flyway, Sri Aurobindo Marg).
  */
 
 const BOUNDS = {
@@ -20,8 +20,31 @@ export function clampCoord(coord: [number, number]): [number, number] {
 
 // Pre-engineered realistic arterial paths snapped to Delhi road corridors
 const CURATED_CORRIDORS: Record<string, [number, number][]> = {
-  // Trans-Yamuna / DND / Barapullah Corridor: Fortis Noida Sec-62 -> AIIMS Trauma Center
-  // Never loops north into Old Delhi/Ghaziabad! Moves strictly along Barapullah elevated arterial.
+  // South Delhi Apex Arterial: Max Super Saket -> AIIMS Trauma Center (Sri Aurobindo Marg)
+  "ND-03-ND-01": [
+    [77.214, 28.530],
+    [77.212, 28.542],
+    [77.210, 28.555],
+    [77.209, 28.567],
+  ],
+
+  // Max Saket -> Safdarjung Hospital
+  "ND-03-ND-02": [
+    [77.214, 28.530],
+    [77.208, 28.538],
+    [77.202, 28.545],
+    [77.195, 28.552],
+  ],
+
+  // Trans-Yamuna / DND Expressway: Fortis Noida Sec-62 -> GTB East Delhi
+  "ND-04-ND-07": [
+    [77.330, 28.620],
+    [77.324, 28.628],
+    [77.318, 28.636],
+    [77.309, 28.645],
+  ],
+
+  // Fortis Noida -> AIIMS Trauma Center (Barapullah Elevated Corridor)
   "ND-04-ND-01": [
     [77.330, 28.620],
     [77.318, 28.608],
@@ -30,6 +53,14 @@ const CURATED_CORRIDORS: Record<string, [number, number][]> = {
     [77.248, 28.576],
     [77.228, 28.570],
     [77.209, 28.567],
+  ],
+
+  // Dwarka Expressway Arterial: Medanta Hub -> Venkateshwar Dwarka
+  "ND-05-ND-18": [
+    [77.118, 28.535],
+    [77.115, 28.545],
+    [77.113, 28.555],
+    [77.112, 28.565],
   ],
 
   // Medanta Gurugram -> GTB East Delhi (NH-48 to Barapullah to Vikas Marg)
@@ -52,12 +83,32 @@ const CURATED_CORRIDORS: Record<string, [number, number][]> = {
     [77.239, 28.636],
   ],
 
-  // Max Saket -> Safdarjung Hospital (Sri Aurobindo Marg arterial)
-  "ND-03-ND-02": [
-    [77.214, 28.530],
-    [77.208, 28.538],
-    [77.202, 28.545],
-    [77.195, 28.552],
+  // Apollo Hospital Sarita -> Holy Family Okhla (Okhla Link Road)
+  "ND-11-ND-25": [
+    [77.284, 28.540],
+    [77.279, 28.544],
+    [77.273, 28.548],
+  ],
+
+  // Artemis Hospital Sector 51 -> Paras Health Sector 43 (Golf Course Road)
+  "ND-23-ND-19": [
+    [77.130, 28.538],
+    [77.135, 28.534],
+    [77.140, 28.530],
+  ],
+
+  // Artemis Hospital -> Fortis Vasant Kunj (Mehrauli-Gurgaon Road)
+  "ND-23-ND-13": [
+    [77.130, 28.538],
+    [77.142, 28.535],
+    [77.156, 28.532],
+  ],
+
+  // BLK-Max Pusa -> Sir Ganga Ram Hospital (Pusa Road Link)
+  "ND-14-ND-10": [
+    [77.181, 28.622],
+    [77.185, 28.620],
+    [77.189, 28.618],
   ],
 
   // BLK-Max Pusa -> Saroj Rohini (Outer Ring Road / Pusa Road arterial)
@@ -81,20 +132,6 @@ const CURATED_CORRIDORS: Record<string, [number, number][]> = {
     [77.195, 28.552],
     [77.202, 28.560],
     [77.209, 28.567],
-  ],
-
-  // Max Saket -> AIIMS Trauma
-  "ND-03-ND-01": [
-    [77.214, 28.530],
-    [77.212, 28.545],
-    [77.209, 28.567],
-  ],
-
-  // Fortis Vasant Kunj -> Safdarjung
-  "ND-13-ND-02": [
-    [77.156, 28.532],
-    [77.172, 28.542],
-    [77.195, 28.552],
   ],
 };
 

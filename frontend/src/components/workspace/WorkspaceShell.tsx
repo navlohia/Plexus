@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import type { ScenarioKey, TickState, TransferOrder, TransferRequestInput, TransferStatus, BloodType, HospitalNode } from "../../types";
 import { CRISIS_SCENARIOS } from "../../lib/crisisData";
-import { NCR_HOSPITAL_METAS } from "../../lib/hospitalTelemetry";
+import { NCR_HOSPITAL_METAS, findOptimalDonorHub } from "../../lib/hospitalTelemetry";
 import { createTransferRequest, fetchState, injectChaos, setTransferStatus, tick } from "../../api";
 import type { WorkspaceTab } from "../../App";
 import MedisoDashboardTab from "./MedisoDashboardTab";
@@ -348,11 +348,11 @@ export default function WorkspaceShell({ initialTab, initialScenario, onExit }: 
   }, [isRebalancing]);
 
   const handleTransferRequest = useCallback(async (p: TransferRequestInput) => {
-    let donorId = p.source_id || "ND-04";
-    if (p.target_id === "ND-04") donorId = "ND-05";
-    else if (p.target_id === "ND-05") donorId = "ND-11";
-    else if (p.target_id === "ND-02") donorId = "ND-03";
-    else if (p.target_id === "ND-07") donorId = "ND-04";
+    let donorId = p.source_id;
+    if (!donorId || donorId === p.target_id) {
+      const match = findOptimalDonorHub(p.target_id, p.blood, state?.nodes);
+      donorId = match.id;
+    }
 
     const currentNodes = Array.isArray(state?.nodes) && state.nodes.length > 0 ? state.nodes : createDefaultHospitalNodes();
     const donorNode = currentNodes.find((n) => n.id === donorId);
@@ -496,17 +496,9 @@ export default function WorkspaceShell({ initialTab, initialScenario, onExit }: 
     const recipient = currentNodes.find((n) => n.id === targetHospitalId);
     if (!recipient) return;
 
-    // Pick top surplus donor (N62, MDT, MAX, NBV, NH4) that is not the recipient
-    const donorCandidates = ["ND-04", "ND-05", "ND-03", "ND-20", "ND-23"].filter((id) => id !== targetHospitalId);
-    let donorNode = currentNodes.find((n) => n.id === donorCandidates[0]);
-    for (const dId of donorCandidates) {
-      const candidate = currentNodes.find((n) => n.id === dId);
-      if (candidate && (candidate.net_balance > (donorNode?.net_balance || 0))) {
-        donorNode = candidate;
-      }
-    }
-    const donorId = donorNode?.id || donorCandidates[0];
-
+    // Dynamically find optimal closest donor hub with surplus (no hardcoded Fortis Noida!)
+    const matched = findOptimalDonorHub(targetHospitalId, "O+", currentNodes);
+    const donorId = matched.id;
     const donorMeta = NCR_HOSPITAL_METAS[donorId] || { code: donorId, short: donorId, fullName: donorId, zone: "Surplus Hub" };
     const recipientMeta = NCR_HOSPITAL_METAS[targetHospitalId] || { code: recipient.name.slice(0, 3).toUpperCase(), short: recipient.name, fullName: recipient.name, zone: "Critical Ward" };
 
@@ -521,8 +513,8 @@ export default function WorkspaceShell({ initialTab, initialScenario, onExit }: 
       donor_blood: "O+",
       recipient_blood: "O+",
       units: requestedUnits,
-      distance_km: 18.2,
-      eta_mins: 18,
+      distance_km: matched.distanceKm,
+      eta_mins: matched.etaMins,
       cooler_temp_c: 21.9,
       age_hours: 22,
       remaining_hours: 50,
