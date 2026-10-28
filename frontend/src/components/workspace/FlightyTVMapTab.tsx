@@ -1,4 +1,5 @@
-import { useMemo, useState, useEffect } from "react";
+import { getRealRoadCorridor } from "../../lib/delhiRoadCorridors";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Map, { Marker, Source, Layer } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
@@ -24,7 +25,7 @@ interface FlightyTVMapTabProps {
   onOpenDispatch: (id: string) => void;
 }
 
-const CARTO_POSITRON = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+const CARTO_VOYAGER = "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json";
 
 // Optimized initial viewport
 const INITIAL_VIEW = {
@@ -90,115 +91,6 @@ const PRIMARY_EXPRESS_CORRIDORS = [
   { source: "ND-03", target: "ND-02", blood: "B+", units: 6, name: "South Delhi Trauma Arterial" },          // Max Saket -> Safdarjung
   { source: "ND-14", target: "ND-17", blood: "O+", units: 6, name: "Outer Ring Road Express Corridor" },     // BLK-Max -> Saroj Rohini
 ];
-
-// Major Real Delhi-NCR Highway Interchanges & Transit Waypoints
-const NCR_HIGHWAY_JUNCTIONS: Record<string, [number, number]> = {
-  DND_TOLL: [77.288, 28.582],
-  ASHRAM_CHOWK: [77.260, 28.572],
-  BARAPULLAH_WEST: [77.228, 28.578],
-  AIIMS_INTERCHANGE: [77.210, 28.568],
-  DHAULA_KUAN: [77.168, 28.591],
-  MAHIPALPUR_FLYOVER: [77.126, 28.544],
-  ITO_BRIDGE: [77.250, 28.628],
-  AKSHARDHAM_INTERCHANGE: [77.295, 28.615],
-  PUNJABI_BAGH: [77.135, 28.640],
-  ROHINI_INTERCHANGE: [77.128, 28.665],
-};
-
-function getCorridorWaypoints(srcCoords: [number, number], tgtCoords: [number, number]): [number, number][] {
-  const [sx, sy] = srcCoords;
-  const [tx, ty] = tgtCoords;
-  const wps: [number, number][] = [srcCoords];
-
-  // 1. Cross-Yamuna: East (lng > 77.28) <-> Central / South (lng < 77.26)
-  if ((sx > 77.28 && tx < 77.26) || (tx > 77.28 && sx < 77.26)) {
-    if (sy < 28.60 || ty < 28.60) {
-      if (sx > tx) {
-        wps.push(NCR_HIGHWAY_JUNCTIONS.DND_TOLL, NCR_HIGHWAY_JUNCTIONS.ASHRAM_CHOWK, NCR_HIGHWAY_JUNCTIONS.BARAPULLAH_WEST);
-      } else {
-        wps.push(NCR_HIGHWAY_JUNCTIONS.BARAPULLAH_WEST, NCR_HIGHWAY_JUNCTIONS.ASHRAM_CHOWK, NCR_HIGHWAY_JUNCTIONS.DND_TOLL);
-      }
-    } else {
-      if (sx > tx) {
-        wps.push(NCR_HIGHWAY_JUNCTIONS.AKSHARDHAM_INTERCHANGE, NCR_HIGHWAY_JUNCTIONS.ITO_BRIDGE);
-      } else {
-        wps.push(NCR_HIGHWAY_JUNCTIONS.ITO_BRIDGE, NCR_HIGHWAY_JUNCTIONS.AKSHARDHAM_INTERCHANGE);
-      }
-    }
-  }
-  // 2. NH-48 Expressway: Gurugram / South-West (lng < 77.15, lat < 28.55) <-> Central / North
-  else if ((sx < 77.15 && sy < 28.55 && (tx > 77.17 || ty > 28.58)) || (tx < 77.15 && ty < 28.55 && (sx > 77.17 || sy > 28.58))) {
-    if (sy < ty) {
-      wps.push(NCR_HIGHWAY_JUNCTIONS.MAHIPALPUR_FLYOVER, NCR_HIGHWAY_JUNCTIONS.DHAULA_KUAN);
-    } else {
-      wps.push(NCR_HIGHWAY_JUNCTIONS.DHAULA_KUAN, NCR_HIGHWAY_JUNCTIONS.MAHIPALPUR_FLYOVER);
-    }
-  }
-  // 3. Outer Ring Road: North-West <-> Central
-  else if ((sy > 28.64 && ty < 28.63) || (ty > 28.64 && sy < 28.63)) {
-    wps.push(NCR_HIGHWAY_JUNCTIONS.PUNJABI_BAGH);
-  }
-  // 4. Local corridor highway midpoint
-  else {
-    const midX = (sx + tx) / 2 + (ty - sy) * 0.05;
-    const midY = (sy + ty) / 2 - (tx - sx) * 0.05;
-    wps.push([midX, midY]);
-  }
-
-  wps.push(tgtCoords);
-  return wps;
-}
-
-function catmullRomSpline(points: [number, number][], numPtsPerSeg = 8): [number, number][] {
-  if (points.length < 2) return points;
-  const pts = [points[0], ...points, points[points.length - 1]];
-  const result: [number, number][] = [];
-
-  for (let i = 1; i < pts.length - 2; i++) {
-    const p0 = pts[i - 1];
-    const p1 = pts[i];
-    const p2 = pts[i + 1];
-    const p3 = pts[i + 2];
-
-    for (let j = 0; j < numPtsPerSeg; j++) {
-      const t = j / numPtsPerSeg;
-      const t2 = t * t;
-      const t3 = t2 * t;
-
-      const x =
-        0.5 *
-        (2 * p1[0] +
-          (-p0[0] + p2[0]) * t +
-          (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 +
-          (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3);
-
-      const y =
-        0.5 *
-        (2 * p1[1] +
-          (-p0[1] + p2[1]) * t +
-          (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 +
-          (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3);
-
-      result.push([x, y]);
-    }
-  }
-  result.push(points[points.length - 1]);
-  return result;
-}
-
-function generateDetailedCorridorRoute(
-  srcCoords: [number, number],
-  tgtCoords: [number, number],
-  properties: Record<string, any>
-): GeoJSON.Feature {
-  const waypoints = getCorridorWaypoints(srcCoords, tgtCoords);
-  const coordinates = catmullRomSpline(waypoints);
-  return {
-    type: "Feature",
-    properties,
-    geometry: { type: "LineString", coordinates },
-  };
-}
 
 export default function FlightyTVMapTab({
   state,
@@ -320,19 +212,12 @@ export default function FlightyTVMapTab({
     });
   }, [selectedNode]);
 
-  // Continuous highway van movement loop
-  const [courierProgress, setCourierProgress] = useState(0);
-  useEffect(() => {
-    let animId: number;
-    let start: number | null = null;
-    const loop = (ts: number) => {
-      if (!start) start = ts;
-      const elapsed = (ts - start) / 1000;
-      setCourierProgress((elapsed * 0.05) % 1);
-      animId = requestAnimationFrame(loop);
-    };
-    animId = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(animId);
+
+
+  // Trigger re-render when new real-road OSRM routes resolve
+  const [, setRouteVersion] = useState(0);
+  const handleRouteLoaded = useCallback(() => {
+    setRouteVersion((v) => v + 1);
   }, []);
 
   // Detailed Highway Corridors using Catmull-Rom road splines (no stringy spaghetti!)
@@ -405,15 +290,23 @@ export default function FlightyTVMapTab({
         const isSelected = selectedHospitalId ? (arc.source === selectedHospitalId || arc.target === selectedHospitalId) : false;
         const isDonorSurplus = src.status !== "Shortage";
 
-        return generateDetailedCorridorRoute(src.coords, tgt.coords, {
-          source: arc.source,
-          target: arc.target,
-          blood: arc.blood,
-          units: arc.units,
-          isDonorSurplus,
-          isEmergency: Boolean(arc.isEmergency),
-          isSelected,
-        });
+        const roadCoords = getRealRoadCorridor(src.coords, tgt.coords, arc.source, arc.target, handleRouteLoaded);
+        return {
+          type: "Feature" as const,
+          properties: {
+            source: arc.source,
+            target: arc.target,
+            blood: arc.blood,
+            units: arc.units,
+            isDonorSurplus,
+            isEmergency: Boolean(arc.isEmergency),
+            isSelected,
+          },
+          geometry: {
+            type: "LineString" as const,
+            coordinates: roadCoords,
+          },
+        };
       })
       .filter(Boolean) as GeoJSON.Feature[];
 
@@ -421,38 +314,6 @@ export default function FlightyTVMapTab({
   }, [showArcs, activeRoutes, selectedHospitalId]);
 
   // Interpolated courier positions along highway splines
-  const courierMarkers = useMemo(() => {
-    if (!showArcs) return [];
-    return activeRoutes.slice(0, 6).map((route, idx) => {
-      const srcMeta = HOSPITAL_REGISTRY[route.source];
-      const tgtMeta = HOSPITAL_REGISTRY[route.target];
-      if (!srcMeta || !tgtMeta) return null;
-
-      const waypoints = getCorridorWaypoints(srcMeta.coords, tgtMeta.coords);
-      const spline = catmullRomSpline(waypoints, 12);
-      if (spline.length < 2) return null;
-
-      const offset = (idx * 0.28) % 1;
-      const progress = (courierProgress + offset) % 1;
-      const exactIdx = progress * (spline.length - 1);
-      const baseIdx = Math.floor(exactIdx);
-      const frac = exactIdx - baseIdx;
-      const nextIdx = Math.min(spline.length - 1, baseIdx + 1);
-
-      const lng = spline[baseIdx][0] + (spline[nextIdx][0] - spline[baseIdx][0]) * frac;
-      const lat = spline[baseIdx][1] + (spline[nextIdx][1] - spline[baseIdx][1]) * frac;
-
-      return {
-        id: `van-${route.source}-${route.target}-${idx}`,
-        lng,
-        lat,
-        units: route.units,
-        blood: route.blood,
-        eta: route.eta || 18,
-        isEmergency: route.isEmergency || tgtMeta.status === "Shortage",
-      };
-    }).filter(Boolean);
-  }, [activeRoutes, courierProgress, showArcs]);
 
   return (
     <div className="flighty-tv-outer-shell">
@@ -606,7 +467,7 @@ export default function FlightyTVMapTab({
         <Map
           {...viewState}
           onMove={(evt) => setViewState((prev) => ({ ...prev, ...evt.viewState }))}
-          mapStyle={CARTO_POSITRON}
+          mapStyle={CARTO_VOYAGER}
           style={{ width: "100%", height: "100%" }}
           attributionControl={false}
         >
@@ -655,41 +516,7 @@ export default function FlightyTVMapTab({
             </Source>
           )}
 
-                    {/* ── LIVE MOVING COURIER VANS ON HIGHWAYS ── */}
-          {courierMarkers.map((van: any) => (
-            <Marker
-              key={van.id}
-              longitude={van.lng}
-              latitude={van.lat}
-              anchor="center"
-              style={{ zIndex: 16, pointerEvents: "none" }}
-            >
-              <div
-                style={{
-                  background: "#0F172A",
-                  color: "#FFFFFF",
-                  padding: "3px 8px",
-                  borderRadius: "999px",
-                  fontSize: "10.5px",
-                  fontWeight: 700,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  boxShadow: "0 2px 10px rgba(0,0,0,0.35)",
-                  border: van.isEmergency ? "1.5px solid #E11D48" : "1.5px solid #15997A",
-                  whiteSpace: "nowrap",
-                  transform: "translateY(-14px)",
-                }}
-              >
-                <span>🚐</span>
-                <span>{van.units}u {van.blood}</span>
-                <span style={{ opacity: 0.5 }}>·</span>
-                <span style={{ color: van.isEmergency ? "#FDA4AF" : "#34D399" }}>{van.eta}m</span>
-              </div>
-            </Marker>
-          ))}
-
-          {/* ── HIGH-PRIORITY INSTANT-CLICK HOSPITAL MAP MARKERS ── */}
+                    {/* ── HIGH-PRIORITY INSTANT-CLICK HOSPITAL MAP MARKERS ── */}
           {hospitalList.map((h) => {
             const isSelected = selectedHospitalId === h.id;
             const isCrisisAffected = activeCrisis && activeCrisis.affectedNodeIds.includes(h.id);
