@@ -3659,3 +3659,52 @@ body {
   color: var(--ws-text-4);
 }
 
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE SURVIVAL PATCH (< 768px): WORKBENCH & GRID STACKING
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 767.98px) {
+  /* Stress Lab & Surge Cards */
+  .surge-cards {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .surge-bench-cols {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    min-width: 600px !important;
+  }
+
+  /* 8-Column ABO Grid becomes 4x2 on mobile */
+  .inv-abo-grid-8 {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 4px !important;
+  }
+
+  /* Dispatch Hub ribbon */
+  .dispatch-kpi-ribbon {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .dispatch-body-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .dispatch-blood-grid,
+  .terminal-abo-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 4px !important;
+  }
+
+  /* Any 4-column KPI rows collapse */
+  .kpi-row-4,
+  .metrics-grid-4 {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+}

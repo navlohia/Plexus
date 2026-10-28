@@ -17,11 +17,24 @@ export default function Biologics3DScene({ activeSlide = 0 }: Biologics3DScenePr
     const container = mountRef.current;
     if (!container) return;
 
+    // Detect mobile touch devices or small screens (<768px)
+    const isMobile =
+      typeof window !== "undefined" &&
+      (window.innerWidth < 768 ||
+        "ontouchstart" in window ||
+        navigator.maxTouchPoints > 0);
+
     const W = container.clientWidth;
     const H = container.clientHeight;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const renderer = new THREE.WebGLRenderer({
+      antialias: !isMobile,
+      alpha: true,
+      powerPreference: isMobile ? "low-power" : "high-performance",
+    });
+
+    // Throttle pixel ratio on mobile to save GPU fill-rate
+    renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2));
     renderer.setSize(W, H);
     renderer.setClearColor(0x000000, 0);
     container.appendChild(renderer.domElement);
@@ -49,13 +62,14 @@ export default function Biologics3DScene({ activeSlide = 0 }: Biologics3DScenePr
     backGlow.position.set(3, 2, -4);
     scene.add(backGlow);
 
-    /* ── 1. Iconic Large Central Glossy Sphere (Platelet Core) ── */
-    const largeGeo = new THREE.SphereGeometry(1.9, 80, 80);
+    /* ── 1. Central Glossy Sphere (Throttled segments on mobile) ── */
+    const sphereSegments = isMobile ? 32 : 80;
+    const largeGeo = new THREE.SphereGeometry(1.9, sphereSegments, sphereSegments);
     const largeMat = new THREE.MeshPhysicalMaterial({
       color: 0xf08080,         // warm salmon/coral
       roughness: 0.16,
       metalness: 0.04,
-      clearcoat: 0.98,
+      clearcoat: isMobile ? 0.6 : 0.98,
       clearcoatRoughness: 0.04,
       reflectivity: 0.9,
     });
@@ -68,16 +82,25 @@ export default function Biologics3DScene({ activeSlide = 0 }: Biologics3DScenePr
     const helixHeight = 6.2;
     const helixRadius = 0.9;
     const helixTurns = 2.4;
-    const steps = 38;
+    const steps = isMobile ? 18 : 38; // Cut node count by >50% on mobile
 
-    const rungGeo = new THREE.CylinderGeometry(0.04, 0.04, helixRadius * 2, 16);
-    const beadGeo = new THREE.SphereGeometry(0.14, 24, 24);
+    const rungGeo = new THREE.CylinderGeometry(
+      0.04,
+      0.04,
+      helixRadius * 2,
+      isMobile ? 8 : 16
+    );
+    const beadGeo = new THREE.SphereGeometry(
+      0.14,
+      isMobile ? 12 : 24,
+      isMobile ? 12 : 24
+    );
 
     const strand1Mat = new THREE.MeshPhysicalMaterial({
       color: 0xfb7185,         // rose
       roughness: 0.18,
       metalness: 0.05,
-      clearcoat: 0.95,
+      clearcoat: isMobile ? 0.5 : 0.95,
       clearcoatRoughness: 0.05,
     });
 
@@ -85,7 +108,7 @@ export default function Biologics3DScene({ activeSlide = 0 }: Biologics3DScenePr
       color: 0xe11d48,         // crimson
       roughness: 0.18,
       metalness: 0.05,
-      clearcoat: 0.95,
+      clearcoat: isMobile ? 0.5 : 0.95,
       clearcoatRoughness: 0.05,
     });
 
@@ -93,8 +116,8 @@ export default function Biologics3DScene({ activeSlide = 0 }: Biologics3DScenePr
       color: 0xffd1dc,         // blush translucent connection
       roughness: 0.25,
       metalness: 0.02,
-      clearcoat: 0.9,
-      transmission: 0.25,
+      clearcoat: isMobile ? 0.5 : 0.9,
+      transmission: isMobile ? 0 : 0.25,
       transparent: true,
       opacity: 0.88,
     });
@@ -136,18 +159,20 @@ export default function Biologics3DScene({ activeSlide = 0 }: Biologics3DScenePr
     dnaGroup.rotation.x = 0.2;
     scene.add(dnaGroup);
 
-    /* ── 3. Satellite Biologic Spheres ───────────────────────── */
-    const satelliteConfigs = [
-      { basePos: [-3.6,  2.2, -1.6], r: 0.54, color: 0xfb7185, speed: 0.85, phase: 0.3 },
-      { basePos: [ 4.8,  2.6, -2.0], r: 0.50, color: 0xe11d48, speed: 1.05, phase: 1.6 },
-      { basePos: [-1.8, -2.9, -2.2], r: 0.44, color: 0xf43f5e, speed: 0.9, phase: 3.2 },
-      { basePos: [ 0.9,  3.4, -2.8], r: 0.38, color: 0xfda4af, speed: 1.25, phase: 4.4 },
-      { basePos: [ 4.2, -2.6, -2.5], r: 0.48, color: 0xbe123c, speed: 0.75, phase: 2.1 },
-      { basePos: [-4.6, -0.6, -2.4], r: 0.46, color: 0xe11d48, speed: 0.95, phase: 5.1 },
-      { basePos: [ 5.6,  0.2, -3.8], r: 0.40, color: 0xfb7185, speed: 0.8, phase: 0.8 },
-    ];
+    /* ── 3. Satellite Biologic Spheres (Removed on mobile for performance) ─ */
+    const satelliteConfigs = isMobile
+      ? []
+      : [
+          { basePos: [-3.6,  2.2, -1.6], r: 0.54, color: 0xfb7185, speed: 0.85, phase: 0.3 },
+          { basePos: [ 4.8,  2.6, -2.0], r: 0.50, color: 0xe11d48, speed: 1.05, phase: 1.6 },
+          { basePos: [-1.8, -2.9, -2.2], r: 0.44, color: 0xf43f5e, speed: 0.9, phase: 3.2 },
+          { basePos: [ 0.9,  3.4, -2.8], r: 0.38, color: 0xfda4af, speed: 1.25, phase: 4.4 },
+          { basePos: [ 4.2, -2.6, -2.5], r: 0.48, color: 0xbe123c, speed: 0.75, phase: 2.1 },
+          { basePos: [-4.6, -0.6, -2.4], r: 0.46, color: 0xe11d48, speed: 0.95, phase: 5.1 },
+          { basePos: [ 5.6,  0.2, -3.8], r: 0.40, color: 0xfb7185, speed: 0.8, phase: 0.8 },
+        ];
 
-    const satelliteMeshes: { mesh: THREE.Mesh; cfg: typeof satelliteConfigs[0] }[] = [];
+    const satelliteMeshes: { mesh: THREE.Mesh; cfg: (typeof satelliteConfigs)[0] }[] = [];
     satelliteConfigs.forEach((cfg) => {
       const geo = new THREE.SphereGeometry(cfg.r, 48, 48);
       const mat = new THREE.MeshPhysicalMaterial({
@@ -165,59 +190,61 @@ export default function Biologics3DScene({ activeSlide = 0 }: Biologics3DScenePr
 
     /* ── Choreographed Slide Poses (MIPOGG Scroll Transitions) ── */
     const slidePoses = [
-      // Slide 0: Hero / Overview (large coral sphere on right, DNA helix floating alongside)
+      // Slide 0: Hero / Overview
       {
-        largePos: { x: 2.3, y: -0.2, z: 0.2 },
-        largeScale: 1.0,
-        dnaPos: { x: 3.8, y: 0.3, z: -1.2 },
+        largePos: { x: isMobile ? 0 : 2.3, y: isMobile ? -1.0 : -0.2, z: isMobile ? -0.5 : 0.2 },
+        largeScale: isMobile ? 0.75 : 1.0,
+        dnaPos: { x: isMobile ? 0.4 : 3.8, y: isMobile ? 0.5 : 0.3, z: isMobile ? -1.8 : -1.2 },
         dnaRot: { x: 0.25, y: 0, z: 0.38 },
-        dnaScale: 0.9,
+        dnaScale: isMobile ? 0.7 : 0.9,
         cameraPos: { x: 0, y: 0, z: 9.0 },
         cameraRotY: 0,
         satSpread: 1.0,
       },
-      // Slide 1: Network at a Glance / Stats (DNA helix rotates forward into profile, large sphere glides down)
+      // Slide 1: Network at a Glance / Stats
       {
-        largePos: { x: 1.7, y: -0.6, z: 1.3 },
-        largeScale: 1.06,
-        dnaPos: { x: 3.1, y: 0.2, z: 0.5 },
+        largePos: { x: isMobile ? 0.4 : 1.7, y: -0.6, z: 1.3 },
+        largeScale: isMobile ? 0.8 : 1.06,
+        dnaPos: { x: isMobile ? 1.0 : 3.1, y: 0.2, z: 0.5 },
         dnaRot: { x: 0.1, y: 1.2, z: 0.22 },
-        dnaScale: 1.05,
+        dnaScale: isMobile ? 0.8 : 1.05,
         cameraPos: { x: -0.3, y: 0.1, z: 8.4 },
         cameraRotY: 0.04,
         satSpread: 1.25,
       },
-      // Slide 2: OR-Tools Engine (DNA helix tilts diagonally like a flow vector, satellites cluster)
+      // Slide 2: OR-Tools Engine
       {
-        largePos: { x: 2.7, y: 0.4, z: -0.5 },
-        largeScale: 0.95,
-        dnaPos: { x: 2.2, y: -0.5, z: -0.8 },
+        largePos: { x: isMobile ? 0.5 : 2.7, y: 0.4, z: -0.5 },
+        largeScale: isMobile ? 0.75 : 0.95,
+        dnaPos: { x: isMobile ? 0.6 : 2.2, y: -0.5, z: -0.8 },
         dnaRot: { x: -0.4, y: 2.2, z: 0.65 },
-        dnaScale: 0.95,
+        dnaScale: isMobile ? 0.7 : 0.95,
         cameraPos: { x: 0.2, y: -0.1, z: 8.8 },
         cameraRotY: -0.05,
         satSpread: 0.85,
       },
-      // Slide 3: Everything you need to know / Accordion (recedes into deep ambient background)
+      // Slide 3: Everything you need to know / Accordion
       {
-        largePos: { x: 3.4, y: -0.2, z: -1.8 },
-        largeScale: 0.80,
-        dnaPos: { x: 4.2, y: 0.6, z: -2.4 },
+        largePos: { x: isMobile ? 0.8 : 3.4, y: -0.2, z: -1.8 },
+        largeScale: isMobile ? 0.65 : 0.80,
+        dnaPos: { x: isMobile ? 1.2 : 4.2, y: 0.6, z: -2.4 },
         dnaRot: { x: 0.3, y: 3.1, z: 0.3 },
-        dnaScale: 0.75,
+        dnaScale: isMobile ? 0.6 : 0.75,
         cameraPos: { x: 0.5, y: 0, z: 9.3 },
         cameraRotY: -0.08,
         satSpread: 0.75,
       },
     ];
 
-    /* ── Mouse Parallax ───────────────────────────────────────── */
+    /* ── Mouse Parallax (Disabled on Mobile Touch Devices) ─────── */
     let tMX = 0, tMY = 0, cMX = 0, cMY = 0;
     const onMouse = (e: MouseEvent) => {
       tMX = (e.clientX / window.innerWidth - 0.5) * 2;
       tMY = (e.clientY / window.innerHeight - 0.5) * 2;
     };
-    window.addEventListener("mousemove", onMouse);
+    if (!isMobile) {
+      window.addEventListener("mousemove", onMouse);
+    }
 
     /* ── Resize Handler ───────────────────────────────────────── */
     const onResize = () => {
@@ -234,22 +261,25 @@ export default function Biologics3DScene({ activeSlide = 0 }: Biologics3DScenePr
     let raf: number;
     let t = 0;
 
-    const curLargePos = { x: 2.3, y: -0.2, z: 0.2 };
-    let curLargeScale = 1.0;
-    const curDnaPos = { x: 3.8, y: 0.3, z: -1.2 };
-    const curDnaRot = { x: 0.25, y: 0, z: 0.38 };
-    let curDnaScale = 0.9;
-    const curCamPos = { x: 0, y: 0, z: 9.0 };
+    const initialPose = slidePoses[0];
+    const curLargePos = { ...initialPose.largePos };
+    let curLargeScale = initialPose.largeScale;
+    const curDnaPos = { ...initialPose.dnaPos };
+    const curDnaRot = { ...initialPose.dnaRot };
+    let curDnaScale = initialPose.dnaScale;
+    const curCamPos = { ...initialPose.cameraPos };
     let curCamRotY = 0;
     let curSatSpread = 1.0;
 
     const animate = () => {
       raf = requestAnimationFrame(animate);
-      t += 0.008;
+      t += isMobile ? 0.006 : 0.008;
 
-      // Mouse smoothing
-      cMX += (tMX - cMX) * 0.045;
-      cMY += (tMY - cMY) * 0.045;
+      if (!isMobile) {
+        // Mouse smoothing (desktop only)
+        cMX += (tMX - cMX) * 0.045;
+        cMY += (tMY - cMY) * 0.045;
+      }
 
       const sIdx = Math.max(0, Math.min(slideRef.current, slidePoses.length - 1));
       const target = slidePoses[sIdx];
@@ -276,8 +306,8 @@ export default function Biologics3DScene({ activeSlide = 0 }: Biologics3DScenePr
       curSatSpread += (target.satSpread - curSatSpread) * k;
 
       // 1. Large Sphere float & gentle spin
-      const floatY = Math.sin(t * 0.8) * 0.18;
-      const floatX = Math.cos(t * 0.45) * 0.08;
+      const floatY = Math.sin(t * 0.8) * (isMobile ? 0.12 : 0.18);
+      const floatX = Math.cos(t * 0.45) * 0.06;
       largeSphere.position.set(
         curLargePos.x + floatX,
         curLargePos.y + floatY,
@@ -287,8 +317,8 @@ export default function Biologics3DScene({ activeSlide = 0 }: Biologics3DScenePr
       largeSphere.rotation.y += 0.0035;
       largeSphere.rotation.z += 0.0015;
 
-      // 2. DNA Helix continuous axial twist + gentle vertical undulation
-      const dnaFloatY = Math.sin(t * 0.95 + 1.2) * 0.15;
+      // 2. DNA Helix continuous axial twist
+      const dnaFloatY = Math.sin(t * 0.95 + 1.2) * (isMobile ? 0.1 : 0.15);
       dnaGroup.position.set(
         curDnaPos.x,
         curDnaPos.y + dnaFloatY,
@@ -296,39 +326,41 @@ export default function Biologics3DScene({ activeSlide = 0 }: Biologics3DScenePr
       );
       dnaGroup.scale.setScalar(curDnaScale);
       dnaGroup.rotation.x = curDnaRot.x + Math.sin(t * 0.5) * 0.05;
-      dnaGroup.rotation.y = curDnaRot.y + t * 0.4; // constant smooth helical unwinding
+      dnaGroup.rotation.y = curDnaRot.y + t * 0.4;
       dnaGroup.rotation.z = curDnaRot.z;
 
-      // Wave ripple traveling along DNA rungs
-      dnaNodes.forEach(({ bead1, bead2, rung, angle }, idx) => {
-        const wave = Math.sin(t * 2.0 - idx * 0.22) * 0.04;
-        const curR = helixRadius + wave;
-        const curA = angle + t * 0.15;
+      // Wave ripple traveling along DNA rungs (lighter on mobile)
+      if (!isMobile) {
+        dnaNodes.forEach(({ bead1, bead2, rung, angle }, idx) => {
+          const wave = Math.sin(t * 2.0 - idx * 0.22) * 0.04;
+          const curR = helixRadius + wave;
+          const curA = angle + t * 0.15;
 
-        bead1.position.x = Math.cos(curA) * curR;
-        bead1.position.z = Math.sin(curA) * curR;
+          bead1.position.x = Math.cos(curA) * curR;
+          bead1.position.z = Math.sin(curA) * curR;
 
-        bead2.position.x = Math.cos(curA + Math.PI) * curR;
-        bead2.position.z = Math.sin(curA + Math.PI) * curR;
+          bead2.position.x = Math.cos(curA + Math.PI) * curR;
+          bead2.position.z = Math.sin(curA + Math.PI) * curR;
 
-        rung.rotation.y = -curA;
-      });
+          rung.rotation.y = -curA;
+        });
 
-      // 3. Satellites orbiting and drifting
-      const satShiftX = sIdx === 3 ? 1.8 : 0;
-      satelliteMeshes.forEach(({ mesh, cfg }) => {
-        const satT = t * cfg.speed + cfg.phase;
-        const driftX = Math.cos(satT) * 0.3 * curSatSpread;
-        const driftY = Math.sin(satT * 1.25) * 0.25 * curSatSpread;
-        const driftZ = Math.sin(satT * 0.7) * 0.22;
+        // 3. Satellites orbiting and drifting (desktop only)
+        const satShiftX = sIdx === 3 ? 1.8 : 0;
+        satelliteMeshes.forEach(({ mesh, cfg }) => {
+          const satT = t * cfg.speed + cfg.phase;
+          const driftX = Math.cos(satT) * 0.3 * curSatSpread;
+          const driftY = Math.sin(satT * 1.25) * 0.25 * curSatSpread;
+          const driftZ = Math.sin(satT * 0.7) * 0.22;
 
-        mesh.position.set(
-          cfg.basePos[0] * curSatSpread + driftX + satShiftX,
-          cfg.basePos[1] + driftY,
-          cfg.basePos[2] + driftZ
-        );
-        mesh.rotation.y += 0.008 * cfg.speed;
-      });
+          mesh.position.set(
+            cfg.basePos[0] * curSatSpread + driftX + satShiftX,
+            cfg.basePos[1] + driftY,
+            cfg.basePos[2] + driftZ
+          );
+          mesh.rotation.y += 0.008 * cfg.speed;
+        });
+      }
 
       // 4. Camera position + mouse parallax tilt
       camera.position.set(
@@ -347,7 +379,9 @@ export default function Biologics3DScene({ activeSlide = 0 }: Biologics3DScenePr
     /* ── Cleanup ──────────────────────────────────────────────── */
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener("mousemove", onMouse);
+      if (!isMobile) {
+        window.removeEventListener("mousemove", onMouse);
+      }
       window.removeEventListener("resize", onResize);
       renderer.dispose();
       if (container.contains(renderer.domElement)) {

@@ -1915,3 +1915,4 @@ def get_benchmark() -> dict[str, Any]:
 @app.post("/api/reset")
 def post_reset() -> dict[str, Any]:
     return _ensure_sim().reset().model_dump()
+
