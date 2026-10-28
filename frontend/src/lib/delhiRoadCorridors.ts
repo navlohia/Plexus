@@ -56,3 +56,4 @@ export function getRealRoadCorridor(
   // Immediate clean fallback while OSRM loads
   return [srcCoords, tgtCoords];
 }
+

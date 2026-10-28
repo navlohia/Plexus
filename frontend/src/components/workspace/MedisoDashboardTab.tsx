@@ -208,10 +208,12 @@ export default function MedisoDashboardTab({
   const [quickUnits, setQuickUnits] = useState<number>(8);
 
   const matchedDonor = useMemo(() => {
-    if (quickRecipient === "ND-04") return { name: "Medanta Gurugram", eta: "28m", km: "24.2" };
-    if (quickRecipient === "ND-07") return { name: "Fortis Hospital Noida", eta: "18m", km: "11.4" };
-    if (quickRecipient === "ND-01") return { name: "Fortis Hospital Noida", eta: "22m", km: "18.2" };
-    return { name: "Apollo Hospital Sarita", eta: "16m", km: "12.8" };
+    if (quickRecipient === "ND-04") return { id: "ND-05", name: "Medanta Gurugram", eta: "28m", km: "24.2" };
+    if (quickRecipient === "ND-07") return { id: "ND-04", name: "Fortis Hospital Noida", eta: "18m", km: "11.4" };
+    if (quickRecipient === "ND-01") return { id: "ND-04", name: "Fortis Hospital Noida", eta: "22m", km: "18.2" };
+    if (quickRecipient === "ND-02") return { id: "ND-03", name: "Max Super Saket", eta: "14m", km: "7.8" };
+    if (quickRecipient === "ND-05") return { id: "ND-11", name: "Apollo Hospital Sarita", eta: "20m", km: "16.4" };
+    return { id: "ND-04", name: "Fortis Hospital Noida", eta: "22m", km: "18.2" };
   }, [quickRecipient]);
 
   // Merge state transfers or use crisp fallback (guarded against any undefined properties)
@@ -408,15 +410,68 @@ export default function MedisoDashboardTab({
       .forEach((t) => onStatusChange(t.id.replace("#", ""), "APPROVED"));
   };
 
+  const recipientNode = useMemo(() => {
+    const liveNodes = Array.isArray(state?.nodes) ? state.nodes : [];
+    return liveNodes.find((n) => n && n.id === quickRecipient);
+  }, [quickRecipient, state?.nodes]);
+
+  const recipientMeta = useMemo(() => {
+    return (
+      NCR_HOSPITALS.find((h) => h.id === quickRecipient) || {
+        id: quickRecipient,
+        codeId: "#ND-260101",
+        code: "AIM",
+        name: "AIIMS Trauma Center",
+        zone: "Central Delhi",
+        stock: 96,
+        oPos: 34,
+        oNeg: 8,
+        status: "Shortage" as const,
+      }
+    );
+  }, [quickRecipient]);
+
+  // Compute live blood stocks across all 8 types for recipient hospital
+  const recipientBloodStocks = useMemo(() => {
+    const map: Record<BloodType, number> = {
+      "O-": 0, "O+": 0, "A-": 0, "A+": 0, "B-": 0, "B+": 0, "AB-": 0, "AB+": 0,
+    };
+    const liveInv = recipientNode?.inventory_by_blood_and_age;
+    BLOOD_GROUPS.forEach((bg) => {
+      if (liveInv?.[bg]) {
+        map[bg] = Object.values(liveInv[bg]).reduce(
+          (sum: number, val: any) => sum + (Number(val) || 0),
+          0
+        );
+      } else {
+        const lr = ledgerRows.find((r) => r.id === quickRecipient);
+        if (bg === "O+") map[bg] = lr?.oPos ?? 6;
+        else if (bg === "O-") map[bg] = lr?.oNeg ?? 2;
+        else map[bg] = Math.max(1, Math.round((lr?.stock ?? 45) * 0.08));
+      }
+    });
+    return map;
+  }, [recipientNode, quickRecipient, ledgerRows]);
+
+  const getScarcity = (bg: BloodType, stock: number) => {
+    if (bg === "O-" || bg === "AB-" || bg === "B-") {
+      if (stock <= 2) return { level: "critical" as const, label: "Critical Shortage", color: "#E11D48" };
+      if (stock <= 5) return { level: "low" as const, label: "Low Reserve", color: "#D97706" };
+      return { level: "optimal" as const, label: "Optimal Buffer", color: "#059669" };
+    } else {
+      if (stock <= 4) return { level: "critical" as const, label: "Critical Shortage", color: "#E11D48" };
+      if (stock <= 9) return { level: "low" as const, label: "Low Reserve", color: "#D97706" };
+      return { level: "optimal" as const, label: "Optimal Buffer", color: "#059669" };
+    }
+  };
+
+  const recipientSelectedStock = recipientBloodStocks[quickBlood] ?? 0;
+  const recipientSelectedScarcity = getScarcity(quickBlood, recipientSelectedStock);
+
   const currentDonorNode = useMemo(() => {
     const liveNodes = Array.isArray(state?.nodes) ? state.nodes : [];
-    let donorId = "ND-04";
-    if (quickRecipient === "ND-04") donorId = "ND-05";
-    else if (quickRecipient === "ND-05") donorId = "ND-11";
-    else if (quickRecipient === "ND-02") donorId = "ND-03";
-    else if (quickRecipient === "ND-07") donorId = "ND-04";
-    return liveNodes.find((n) => n && n.id === donorId);
-  }, [quickRecipient, state?.nodes]);
+    return liveNodes.find((n) => n && n.id === matchedDonor.id);
+  }, [matchedDonor, state?.nodes]);
 
   const donorBloodAvailable = useMemo(() => {
     if (!currentDonorNode?.inventory_by_blood_and_age?.[quickBlood]) return 24;
@@ -428,15 +483,9 @@ export default function MedisoDashboardTab({
 
   const handleQuickSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    let donorId = "ND-04";
-    if (quickRecipient === "ND-04") donorId = "ND-05";
-    else if (quickRecipient === "ND-05") donorId = "ND-11";
-    else if (quickRecipient === "ND-02") donorId = "ND-03";
-    else if (quickRecipient === "ND-07") donorId = "ND-04";
-
     onInitiateTransfer({
       target_id: quickRecipient,
-      source_id: donorId,
+      source_id: matchedDonor.id,
       blood: quickBlood,
       units: quickUnits,
       urgency: "CRITICAL",
@@ -994,8 +1043,22 @@ export default function MedisoDashboardTab({
                         </td>
                         <td>
                           <div className="mediso-abo-cell">
-                            <span className="mediso-abo-pill">O+ {row.oPos}u</span>
-                            <span className="mediso-abo-pill pill-subtle">O- {row.oNeg}u</span>
+                            <span
+                              className={`mediso-abo-pill ${
+                                row.oPos <= 4 ? "pill-critical" : row.oPos <= 9 ? "pill-warning" : "pill-optimal"
+                              }`}
+                              title={`${row.name} O+ stock: ${row.oPos}u`}
+                            >
+                              O+ {row.oPos}u
+                            </span>
+                            <span
+                              className={`mediso-abo-pill ${
+                                row.oNeg <= 2 ? "pill-critical" : row.oNeg <= 5 ? "pill-warning" : "pill-subtle"
+                              }`}
+                              title={`${row.name} O- trauma buffer: ${row.oNeg}u`}
+                            >
+                              O- {row.oNeg}u
+                            </span>
                           </div>
                         </td>
                         <td>
@@ -1118,9 +1181,10 @@ export default function MedisoDashboardTab({
             </div>
           </div>
 
-          {/* 1-Line Quick-Dispatch Bar (flex-wrap: wrap & flex-shrink: 0 ensures + Dispatch Courier is NEVER clipped!) */}
+          {/* 2-Row Smart Cold-Chain Dispatch Matchmaker (Scarcity Color-Coded & Live Telemetry) */}
           <form onSubmit={handleQuickSubmit} className="dispatch-quick-bar">
-            <div className="quick-left-group">
+            {/* ROW 1: Controls (Recipient Selector + Color-Coded Scarcity Blood Pills + Qty) */}
+            <div className="quick-controls-row">
               <div className="quick-item">
                 <span className="quick-label">Recipient:</span>
                 <select
@@ -1128,27 +1192,37 @@ export default function MedisoDashboardTab({
                   onChange={(e) => setQuickRecipient(e.target.value)}
                   className="quick-select"
                 >
-                  {NCR_HOSPITALS.map((h) => (
-                    <option key={h.id} value={h.id}>
-                      [{h.code}] {h.name}
-                    </option>
-                  ))}
+                  {NCR_HOSPITALS.map((h) => {
+                    const isShortage = h.status === "Shortage";
+                    return (
+                      <option key={h.id} value={h.id}>
+                        [{h.code}] {h.name} {isShortage ? "· ⚠ Shortage" : ""}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
 
               <div className="quick-item">
                 <span className="quick-label">Blood:</span>
                 <div className="quick-pills-row">
-                  {BLOOD_GROUPS.map((bg) => (
-                    <button
-                      key={bg}
-                      type="button"
-                      onClick={() => setQuickBlood(bg)}
-                      className={`quick-bg-pill${quickBlood === bg ? " active" : ""}`}
-                    >
-                      {bg}
-                    </button>
-                  ))}
+                  {BLOOD_GROUPS.map((bg) => {
+                    const stock = recipientBloodStocks[bg];
+                    const sc = getScarcity(bg, stock);
+                    const isSelected = quickBlood === bg;
+                    return (
+                      <button
+                        key={bg}
+                        type="button"
+                        onClick={() => setQuickBlood(bg)}
+                        className={`quick-bg-pill scarcity-${sc.level}${isSelected ? " active" : ""}`}
+                        title={`${recipientMeta.name} has ${stock}u of ${bg} (${sc.label})`}
+                      >
+                        <span className="pill-bg-name">{bg}</span>
+                        <span className="pill-bg-stock">{stock}u</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1169,10 +1243,29 @@ export default function MedisoDashboardTab({
               </div>
             </div>
 
-            <div className="quick-right-group">
-              <div className="quick-matched-readout">
-                <span className="matched-dot" />
-                <span>Matched: <strong>{matchedDonor.name}</strong> ({matchedDonor.eta}) · <span style={{ color: "#15997A", fontWeight: 700 }}>{donorBloodAvailable}u {quickBlood} stock</span></span>
+            {/* ROW 2: Next-Line Live Telemetry Ribbon (Recipient Current Stock vs Matched Donor + Dispatch Button) */}
+            <div className="quick-telemetry-row">
+              <div className="telemetry-badges-group">
+                {/* Recipient current stock chip with live scarcity level indicator */}
+                <div className={`quick-live-pill recipient scarcity-${recipientSelectedScarcity.level}`}>
+                  <span className="status-indicator-dot" />
+                  <span className="quick-pill-text">
+                    Recipient <strong>[{recipientMeta.code}] {recipientMeta.name}</strong> currently has{" "}
+                    <strong className="stock-number">{recipientSelectedStock}u {quickBlood}</strong> in stock
+                    <span className="scarcity-subtext"> ({recipientSelectedScarcity.label})</span>
+                  </span>
+                </div>
+
+                <span className="telemetry-transfer-arrow">➔</span>
+
+                {/* Matched Donor supply chip */}
+                <div className="quick-live-pill donor">
+                  <span className="matched-dot" />
+                  <span className="quick-pill-text">
+                    Matched Donor <strong>{matchedDonor.name}</strong> ({matchedDonor.eta}):{" "}
+                    <strong className="donor-stock-number">{donorBloodAvailable}u {quickBlood}</strong> available
+                  </span>
+                </div>
               </div>
 
               <button type="submit" className="quick-dispatch-submit-btn">
