@@ -372,7 +372,12 @@ class DualSimulator:
         return self.tick(hours=0)
 
     def create_transfer_request(
-        self, target_id: str, blood: str, units: int, urgency: str
+        self,
+        target_id: str,
+        blood: str,
+        units: int,
+        urgency: str,
+        source_id: str | None = None,
     ) -> tuple[SimulationTickState, TransferOrder | None]:
         """Recommend the best donor for a coordinator's manual request."""
         engine = self._active_engine
@@ -383,6 +388,8 @@ class DualSimulator:
         candidates: list[tuple[float, TransferOrder]] = []
         for nid in self._order:
             if nid == target_id:
+                continue
+            if source_id and nid != source_id:
                 continue
             distance = float(DISTANCE_KM.get((nid, target_id), 0.0))
             if distance <= 0.0:
@@ -450,20 +457,24 @@ class DualSimulator:
         return self.tick(hours=0), order
 
     def _move_manual_stock(self, order: TransferOrder) -> bool:
-        engine = self._active_engine
-        batches = engine.inventory[order.source_id][order.donor_blood]
-        transit_h = order.eta_mins / 60.0
-        shipped = _draw_oldest(batches, order.units, order.age_hours)
-        arrival = int(round(order.age_hours + transit_h))
-        if shipped <= 0 or arrival >= SHELF_LIFE_H:
-            return False
-        target_batches = engine.inventory[order.target_id][order.donor_blood]
-        target_batches[arrival] = target_batches.get(arrival, 0) + shipped
-        order.units = shipped
-        order.remaining_hours = int(SHELF_LIFE_H - arrival)
-        engine.delivered_units += shipped
-        engine.cold_chain_cost += order.distance_km * shipped * TRANSIT_COST_PER_KM
-        return True
+        moved = False
+        for engine in self._engines.values():
+            if order.source_id not in engine.inventory or order.donor_blood not in engine.inventory[order.source_id]:
+                continue
+            batches = engine.inventory[order.source_id][order.donor_blood]
+            transit_h = order.eta_mins / 60.0
+            shipped = _draw_oldest(batches, order.units, order.age_hours)
+            arrival = int(round(order.age_hours + transit_h))
+            if shipped <= 0 or arrival >= SHELF_LIFE_H:
+                continue
+            target_batches = engine.inventory[order.target_id][order.donor_blood]
+            target_batches[arrival] = target_batches.get(arrival, 0) + shipped
+            order.units = shipped
+            order.remaining_hours = int(SHELF_LIFE_H - arrival)
+            engine.delivered_units += shipped
+            engine.cold_chain_cost += order.distance_km * shipped * TRANSIT_COST_PER_KM
+            moved = True
+        return moved
 
     # --------------------------------------------------------------- stepping
     def _advance_clock(self, hours: int) -> None:

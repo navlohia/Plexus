@@ -126,3 +126,4 @@ class TransferRequestPayload(BaseModel):
     blood: str
     units: int = 6
     urgency: str = "URGENT"
+    source_id: str | None = None

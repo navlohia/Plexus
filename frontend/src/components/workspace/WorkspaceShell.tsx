@@ -7,7 +7,7 @@ import {
   Zap,
   Droplets,
 } from "lucide-react";
-import type { ScenarioKey, TickState, TransferOrder, TransferRequestInput, TransferStatus, BloodType } from "../../types";
+import type { ScenarioKey, TickState, TransferOrder, TransferRequestInput, TransferStatus, BloodType, HospitalNode } from "../../types";
 import { CRISIS_SCENARIOS } from "../../lib/crisisData";
 import { createTransferRequest, fetchState, injectChaos, setTransferStatus, tick } from "../../api";
 import type { WorkspaceTab } from "../../App";
@@ -23,12 +23,79 @@ interface WorkspaceShellProps {
   onExit: () => void;
 }
 
+// 25 Delhi-NCR realistic hospital baseline nodes
+export function createDefaultHospitalNodes(): HospitalNode[] {
+  const configs = [
+    { id: "ND-01", name: "AIIMS Trauma Center", zone: "Central Delhi", lat: 28.567, lng: 77.209, stock: 96, netBal: -14 },
+    { id: "ND-02", name: "Safdarjung Hospital", zone: "South Delhi", lat: 28.552, lng: 77.195, stock: 85, netBal: -12 },
+    { id: "ND-03", name: "Max Super Saket", zone: "South Delhi", lat: 28.530, lng: 77.214, stock: 106, netBal: 12 },
+    { id: "ND-04", name: "Fortis Hospital Noida", zone: "Noida Sec-62", lat: 28.620, lng: 77.330, stock: 93, netBal: 24 },
+    { id: "ND-05", name: "Medanta The Medicity", zone: "Gurugram NH-48", lat: 28.535, lng: 77.118, stock: 135, netBal: 18 },
+    { id: "ND-06", name: "Fortis Escorts Okhla", zone: "South Delhi", lat: 28.560, lng: 77.278, stock: 72, netBal: -8 },
+    { id: "ND-07", name: "GTB Hospital East Delhi", zone: "East Delhi", lat: 28.665, lng: 77.309, stock: 68, netBal: -18 },
+    { id: "ND-08", name: "Dr. RML Hospital", zone: "Central Delhi", lat: 28.625, lng: 77.202, stock: 102, netBal: 4 },
+    { id: "ND-09", name: "Lok Nayak LNJP", zone: "Central Delhi", lat: 28.636, lng: 77.239, stock: 88, netBal: -8 },
+    { id: "ND-10", name: "Sir Ganga Ram Hospital", zone: "Old Rajinder", lat: 28.618, lng: 77.189, stock: 94, netBal: 4 },
+    { id: "ND-11", name: "Apollo Hospital Sarita", zone: "South Delhi", lat: 28.540, lng: 77.284, stock: 112, netBal: 22 },
+    { id: "ND-12", name: "Rajiv Gandhi Super", zone: "East Delhi", lat: 28.660, lng: 77.318, stock: 65, netBal: -16 },
+    { id: "ND-13", name: "Fortis Vasant Kunj", zone: "South Delhi", lat: 28.532, lng: 77.156, stock: 82, netBal: 8 },
+    { id: "ND-14", name: "BLK-Max Super Specialty", zone: "Central Delhi", lat: 28.622, lng: 77.181, stock: 91, netBal: 2 },
+    { id: "ND-15", name: "Manipal Hospital Dwarka", zone: "West Delhi", lat: 28.580, lng: 77.110, stock: 89, netBal: 5 },
+    { id: "ND-16", name: "St. Stephens Tis Hazari", zone: "North Delhi", lat: 28.655, lng: 77.217, stock: 74, netBal: 3 },
+    { id: "ND-17", name: "Saroj Hospital Rohini", zone: "North Delhi", lat: 28.665, lng: 77.135, stock: 61, netBal: -15 },
+    { id: "ND-18", name: "Venkateshwar Dwarka", zone: "West Delhi", lat: 28.565, lng: 77.112, stock: 77, netBal: 6 },
+    { id: "ND-19", name: "Paras Health Sector 43", zone: "Gurugram", lat: 28.530, lng: 77.140, stock: 83, netBal: 11 },
+    { id: "ND-20", name: "Jaypee Hospital Noida", zone: "Noida Sec-128", lat: 28.545, lng: 77.330, stock: 95, netBal: 16 },
+    { id: "ND-21", name: "DDU Hospital Hari Nagar", zone: "West Delhi", lat: 28.615, lng: 77.125, stock: 69, netBal: -11 },
+    { id: "ND-22", name: "Sanjay Gandhi Mangolpuri", zone: "North Delhi", lat: 28.660, lng: 77.120, stock: 58, netBal: -20 },
+    { id: "ND-23", name: "Artemis Hospital Sector 51", zone: "Gurugram", lat: 28.538, lng: 77.130, stock: 104, netBal: 15 },
+    { id: "ND-24", name: "Max Super Patparganj", zone: "East Delhi", lat: 28.630, lng: 77.304, stock: 86, netBal: 7 },
+    { id: "ND-25", name: "Holy Family Okhla", zone: "South Delhi", lat: 28.548, lng: 77.273, stock: 79, netBal: 4 },
+  ];
+
+  return configs.map((c) => {
+    const s = c.stock;
+    const oPos = Math.max(8, Math.round(s * 0.35));
+    const oNeg = Math.max(1, Math.round(s * 0.06));
+    const aPos = Math.max(6, Math.round(s * 0.23));
+    const aNeg = Math.max(1, Math.round(s * 0.04));
+    const bPos = Math.max(5, Math.round(s * 0.21));
+    const bNeg = Math.max(1, Math.round(s * 0.04));
+    const abPos = Math.max(2, Math.round(s * 0.06));
+    const abNeg = Math.max(0, Math.round(s * 0.01));
+
+    const inv: Record<string, Record<string, number>> = {
+      "O+": { "1": Math.round(oPos * 0.2), "2": Math.round(oPos * 0.2), "3": Math.round(oPos * 0.2), "4": Math.round(oPos * 0.2), "5": oPos - 4 * Math.round(oPos * 0.2) },
+      "O-": { "1": Math.round(oNeg * 0.2), "2": Math.round(oNeg * 0.2), "3": Math.round(oNeg * 0.2), "4": Math.round(oNeg * 0.2), "5": oNeg - 4 * Math.round(oNeg * 0.2) },
+      "A+": { "1": Math.round(aPos * 0.2), "2": Math.round(aPos * 0.2), "3": Math.round(aPos * 0.2), "4": Math.round(aPos * 0.2), "5": aPos - 4 * Math.round(aPos * 0.2) },
+      "A-": { "1": Math.round(aNeg * 0.2), "2": Math.round(aNeg * 0.2), "3": Math.round(aNeg * 0.2), "4": Math.round(aNeg * 0.2), "5": aNeg - 4 * Math.round(aNeg * 0.2) },
+      "B+": { "1": Math.round(bPos * 0.2), "2": Math.round(bPos * 0.2), "3": Math.round(bPos * 0.2), "4": Math.round(bPos * 0.2), "5": bPos - 4 * Math.round(bPos * 0.2) },
+      "B-": { "1": Math.round(bNeg * 0.2), "2": Math.round(bNeg * 0.2), "3": Math.round(bNeg * 0.2), "4": Math.round(bNeg * 0.2), "5": bNeg - 4 * Math.round(bNeg * 0.2) },
+      "AB+": { "1": Math.round(abPos * 0.2), "2": Math.round(abPos * 0.2), "3": Math.round(abPos * 0.2), "4": Math.round(abPos * 0.2), "5": abPos - 4 * Math.round(abPos * 0.2) },
+      "AB-": { "1": 0, "2": 0, "3": 0, "4": 0, "5": abNeg },
+    };
+
+    return {
+      id: c.id,
+      name: c.name,
+      zone: c.zone,
+      lat: c.lat,
+      lng: c.lng,
+      trauma_level: c.stock < 80 ? 3 : 2,
+      active_surge_type: "NONE",
+      inventory_by_blood_and_age: inv,
+      demand_forecast_24h: { "O+": 25, "O-": 6, "A+": 16, "A-": 4, "B+": 12, "B-": 3, "AB+": 4, "AB-": 1 },
+      net_balance: c.netBal,
+    };
+  });
+}
+
 const FALLBACK_STATE: TickState = {
   day: 1,
   hour: 0,
   mode: "ORTOOLS_SOLVER",
   kpis: [],
-  nodes: [],
+  nodes: createDefaultHospitalNodes(),
   active_arcs: [],
   transfers: [
     {
@@ -304,123 +371,128 @@ export default function WorkspaceShell({ initialTab, initialScenario, onExit }: 
   }, [isRebalancing]);
 
   const handleTransferRequest = useCallback(async (p: TransferRequestInput) => {
-    // Determine smart matched donor based on target
-    let donorId = "ND-04";
-    let donorName = "Fortis Hospital Noida";
-    let donorZone = "Noida Sec-62";
-    let distKm = 18.2;
-    let etaMins = 22;
+    let donorId = p.source_id || "ND-04";
+    if (p.target_id === "ND-04") donorId = "ND-05";
+    else if (p.target_id === "ND-05") donorId = "ND-11";
+    else if (p.target_id === "ND-02") donorId = "ND-03";
+    else if (p.target_id === "ND-07") donorId = "ND-04";
 
-    if (p.target_id === "ND-04") {
-      donorId = "ND-05";
-      donorName = "Medanta The Medicity";
-      donorZone = "Gurugram NH-48";
-      distKm = 24.2;
-      etaMins = 28;
-    } else if (p.target_id === "ND-05") {
-      donorId = "ND-11";
-      donorName = "Apollo Hospital Sarita";
-      donorZone = "South Delhi";
-      distKm = 21.0;
-      etaMins = 25;
-    } else if (p.target_id === "ND-02") {
-      donorId = "ND-03";
-      donorName = "Max Super Saket";
-      donorZone = "South Delhi";
-      distKm = 7.8;
-      etaMins = 12;
-    } else if (p.target_id === "ND-07") {
-      donorId = "ND-04";
-      donorName = "Fortis Hospital Noida";
-      donorZone = "Noida Sec-62";
-      distKm = 11.4;
-      etaMins = 18;
+    const currentNodes = Array.isArray(state?.nodes) && state.nodes.length > 0 ? state.nodes : createDefaultHospitalNodes();
+    const donorNode = currentNodes.find((n) => n.id === donorId);
+
+    // Compute actual donor blood availability
+    const donorBloodInv = donorNode?.inventory_by_blood_and_age?.[p.blood] || {};
+    const donorAvailableBlood: number = Object.values(donorBloodInv).reduce((s: number, v: any) => s + (Number(v) || 0), 0);
+    const donorTotalStock: number = donorNode
+      ? Object.values(donorNode.inventory_by_blood_and_age || {}).reduce(
+          (s: number, b: any) => s + Object.values(b || {}).reduce((acc: number, v: any) => acc + (Number(v) || 0), 0),
+          0
+        )
+      : 80;
+
+    if (donorTotalStock <= 0 || donorAvailableBlood <= 0) {
+      showToast(`Cannot dispatch: ${donorNode?.name || donorId} has 0 units of ${p.blood} remaining!`, "error");
+      return;
     }
 
-    const hospitalLookup: Record<string, { name: string; zone: string }> = {
-      "ND-01": { name: "AIIMS Trauma Center", zone: "Central Delhi" },
-      "ND-02": { name: "Safdarjung Hospital", zone: "South Delhi" },
-      "ND-03": { name: "Max Super Saket", zone: "South Delhi" },
-      "ND-04": { name: "Fortis Hospital Noida", zone: "Noida Sec-62" },
-      "ND-05": { name: "Medanta The Medicity", zone: "Gurugram NH-48" },
-      "ND-06": { name: "Fortis Escorts Okhla", zone: "South Delhi" },
-      "ND-07": { name: "GTB Hospital East Delhi", zone: "East Delhi" },
-      "ND-08": { name: "Dr. RML Hospital", zone: "Central Delhi" },
-      "ND-09": { name: "Lok Nayak LNJP", zone: "Central Delhi" },
-      "ND-10": { name: "Sir Ganga Ram Hospital", zone: "Old Rajinder" },
-      "ND-11": { name: "Apollo Hospital Sarita", zone: "South Delhi" },
-      "ND-12": { name: "Rajiv Gandhi Super", zone: "East Delhi" },
-      "ND-13": { name: "Fortis Vasant Kunj", zone: "South Delhi" },
-      "ND-14": { name: "BLK-Max Super Specialty", zone: "Central Delhi" },
-      "ND-15": { name: "Manipal Hospital Dwarka", zone: "West Delhi" },
-      "ND-16": { name: "St. Stephens Tis Hazari", zone: "North Delhi" },
-      "ND-17": { name: "Saroj Hospital Rohini", zone: "North Delhi" },
-      "ND-18": { name: "Venkateshwar Dwarka", zone: "West Delhi" },
-      "ND-19": { name: "Paras Health Sector 43", zone: "Gurugram" },
-      "ND-20": { name: "Jaypee Hospital Noida", zone: "Noida Sec-128" },
-      "ND-21": { name: "DDU Hospital Hari Nagar", zone: "West Delhi" },
-      "ND-22": { name: "Sanjay Gandhi Mangolpuri", zone: "North Delhi" },
-      "ND-23": { name: "Artemis Hospital Sector 51", zone: "Gurugram" },
-      "ND-24": { name: "Max Super Patparganj", zone: "East Delhi" },
-      "ND-25": { name: "Holy Family Okhla", zone: "South Delhi" },
+    const actualUnits = Math.min(p.units, donorAvailableBlood, donorTotalStock);
+
+    const hospitalLookup: Record<string, { name: string; zone: string; code: string }> = {
+      "ND-01": { name: "AIIMS Trauma Center", zone: "Central Delhi", code: "AIM" },
+      "ND-02": { name: "Safdarjung Hospital", zone: "South Delhi", code: "SFD" },
+      "ND-03": { name: "Max Super Saket", zone: "South Delhi", code: "MAX" },
+      "ND-04": { name: "Fortis Hospital Noida", zone: "Noida Sec-62", code: "N62" },
+      "ND-05": { name: "Medanta The Medicity", zone: "Gurugram NH-48", code: "MDT" },
+      "ND-06": { name: "Fortis Escorts Okhla", zone: "South Delhi", code: "FTN" },
+      "ND-07": { name: "GTB Hospital East Delhi", zone: "East Delhi", code: "GTB" },
+      "ND-08": { name: "Dr. RML Hospital", zone: "Central Delhi", code: "RML" },
+      "ND-09": { name: "Lok Nayak LNJP", zone: "Central Delhi", code: "LNJ" },
+      "ND-10": { name: "Sir Ganga Ram Hospital", zone: "Old Rajinder", code: "SGR" },
+      "ND-11": { name: "Apollo Hospital Sarita", zone: "South Delhi", code: "APL" },
+      "ND-12": { name: "Rajiv Gandhi Super", zone: "East Delhi", code: "RGV" },
+      "ND-13": { name: "Fortis Vasant Kunj", zone: "South Delhi", code: "FSB" },
+      "ND-14": { name: "BLK-Max Super Specialty", zone: "Central Delhi", code: "BLK" },
+      "ND-15": { name: "Manipal Hospital Dwarka", zone: "West Delhi", code: "MPD" },
+      "ND-16": { name: "St. Stephens Tis Hazari", zone: "North Delhi", code: "STP" },
+      "ND-17": { name: "Saroj Hospital Rohini", zone: "North Delhi", code: "ROH" },
+      "ND-18": { name: "Venkateshwar Dwarka", zone: "West Delhi", code: "DWK" },
+      "ND-19": { name: "Paras Health Sector 43", zone: "Gurugram", code: "GCH" },
+      "ND-20": { name: "Jaypee Hospital Noida", zone: "Noida Sec-128", code: "NBV" },
+      "ND-21": { name: "DDU Hospital Hari Nagar", zone: "West Delhi", code: "DRB" },
+      "ND-22": { name: "Sanjay Gandhi Mangolpuri", zone: "North Delhi", code: "SDP" },
+      "ND-23": { name: "Artemis Hospital Sector 51", zone: "Gurugram", code: "NH4" },
+      "ND-24": { name: "Max Super Patparganj", zone: "East Delhi", code: "MXP" },
+      "ND-25": { name: "Holy Family Okhla", zone: "South Delhi", code: "PRS" },
     };
 
-    const targetInfo = hospitalLookup[p.target_id] || { name: p.target_id, zone: "NCR Corridor" };
+    const targetInfo = hospitalLookup[p.target_id] || { name: p.target_id, zone: "NCR Corridor", code: p.target_id };
+    const donorInfo = hospitalLookup[donorId] || { name: donorId, zone: "NCR Corridor", code: donorId };
 
     const newTx: TransferOrder = {
       id: `#TX-${Math.floor(1050 + Math.random() * 50)}`,
       source_id: donorId,
-      source_name: donorName,
-      source_zone: donorZone,
+      source_name: donorInfo.name,
+      source_zone: donorInfo.zone,
       target_id: p.target_id,
       target_name: targetInfo.name,
       target_zone: targetInfo.zone,
       donor_blood: p.blood,
       recipient_blood: p.blood,
-      units: p.units,
-      distance_km: distKm,
-      eta_mins: etaMins,
+      units: actualUnits,
+      distance_km: 18.2,
+      eta_mins: 22,
       cooler_temp_c: 22.0,
       age_hours: 24,
       remaining_hours: 48,
       status: "APPROVED" as TransferStatus,
       origin: "MANUAL" as const,
       urgency: p.urgency || ("CRITICAL" as const),
-      reason_text: `Express courier dispatch to ${targetInfo.name}`,
+      reason_text: `Express courier dispatch from ${donorInfo.name} to ${targetInfo.name}`,
       created_at: "Just now",
     };
 
-    // Atomically deduct stock from donor and update recipient in shared nodes
+    // ATOMIC MUTATION: Deplete donor and supply recipient
     setState((prev) => {
-      const currentNodes = Array.isArray(prev?.nodes) && prev.nodes.length > 0 ? prev.nodes : FALLBACK_STATE.nodes;
-      const updatedNodes = currentNodes.map((n) => {
+      const prevNodes = Array.isArray(prev?.nodes) && prev.nodes.length > 0 ? prev.nodes : createDefaultHospitalNodes();
+      const updatedNodes = prevNodes.map((n) => {
+        // 1. DEDUCT FROM DONOR (Fortis Noida)
         if (n.id === donorId) {
           const inv = { ...(n.inventory_by_blood_and_age || {}) };
           const bInv = { ...(inv[p.blood] || {}) };
-          let needed = p.units;
-          for (const age of Object.keys(bInv)) {
-            const aNum = Number(age);
-            const cur = bInv[aNum] || 0;
+          let rem = actualUnits;
+          for (const k of Object.keys(bInv)) {
+            const cur = Number(bInv[k]) || 0;
             if (cur > 0) {
-              const take = Math.min(needed, cur);
-              bInv[aNum] -= take;
-              needed -= take;
-              if (needed <= 0) break;
+              const take = Math.min(rem, cur);
+              bInv[k] = cur - take;
+              rem -= take;
+              if (rem <= 0) break;
             }
+          }
+          if (rem > 0 && bInv["1"] !== undefined) {
+            bInv["1"] = Math.max(0, (Number(bInv["1"]) || 0) - rem);
           }
           inv[p.blood] = bInv;
           return {
             ...n,
             inventory_by_blood_and_age: inv,
-            net_balance: (n.net_balance || 0) - p.units,
+            net_balance: (n.net_balance || 0) - actualUnits,
           };
         }
+
+        // 2. CREDIT TO RECIPIENT (AIIMS Trauma Center)
         if (n.id === p.target_id) {
+          const inv = { ...(n.inventory_by_blood_and_age || {}) };
+          const bInv = { ...(inv[p.blood] || {}) };
+          bInv["4"] = (Number(bInv["4"]) || 0) + actualUnits;
+          inv[p.blood] = bInv;
           return {
             ...n,
-            net_balance: (n.net_balance || 0) + p.units,
+            inventory_by_blood_and_age: inv,
+            net_balance: (n.net_balance || 0) + actualUnits,
           };
         }
+
         return n;
       });
 
@@ -431,11 +503,16 @@ export default function WorkspaceShell({ initialTab, initialScenario, onExit }: 
       };
     });
 
-    showToast(`✓ Express Courier Dispatched: ${p.units}u ${p.blood} to ${targetInfo.name}`);
+    showToast(`✓ Express Courier Dispatched: ${actualUnits}u ${p.blood} from ${donorInfo.code} → ${targetInfo.code}`);
 
-    // Fire background API dispatch
-    createTransferRequest(p).catch(() => {});
-  }, []);
+    createTransferRequest({
+      target_id: p.target_id,
+      source_id: donorId,
+      blood: p.blood,
+      units: actualUnits,
+      urgency: p.urgency || "CRITICAL",
+    }).catch(() => {});
+  }, [state?.nodes]);
 
   const handleStatusChange = useCallback(async (txId: string, status: TransferStatus) => {
     setState((prev) => {

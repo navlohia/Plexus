@@ -38,10 +38,10 @@ interface MedisoDashboardTabProps {
 
 // 25 Verified Delhi-NCR Hospitals with clean concise names
 const NCR_HOSPITALS = [
-  { id: "ND-01", codeId: "#ND-260101", code: "AIM", name: "AIIMS Trauma Center", zone: "Central Delhi", stock: 96, oPos: 34, oNeg: 8, status: "Optimal" },
+  { id: "ND-01", codeId: "#ND-260101", code: "AIM", name: "AIIMS Trauma Center", zone: "Central Delhi", stock: 96, oPos: 34, oNeg: 8, status: "Shortage" },
   { id: "ND-02", codeId: "#ND-260102", code: "SFD", name: "Safdarjung Hospital", zone: "South Delhi", stock: 119, oPos: 42, oNeg: 12, status: "Optimal" },
   { id: "ND-03", codeId: "#ND-260103", code: "MAX", name: "Max Super Saket", zone: "South Delhi", stock: 106, oPos: 38, oNeg: 9, status: "<36h Surplus" },
-  { id: "ND-04", codeId: "#ND-260104", code: "N62", name: "Fortis Hospital Noida", zone: "Noida Sec-62", stock: 84, oPos: 28, oNeg: 4, status: "Shortage" },
+  { id: "ND-04", codeId: "#ND-260104", code: "N62", name: "Fortis Hospital Noida", zone: "Noida Sec-62", stock: 93, oPos: 32, oNeg: 6, status: "<36h Surplus" },
   { id: "ND-05", codeId: "#ND-260105", code: "MDT", name: "Medanta The Medicity", zone: "Gurugram NH-48", stock: 135, oPos: 48, oNeg: 14, status: "Optimal" },
   { id: "ND-06", codeId: "#ND-260106", code: "FTN", name: "Fortis Escorts Okhla", zone: "South Delhi", stock: 72, oPos: 24, oNeg: 5, status: "<36h Surplus" },
   { id: "ND-07", codeId: "#ND-260107", code: "GTB", name: "GTB Hospital East Delhi", zone: "East Delhi", stock: 68, oPos: 21, oNeg: 3, status: "Shortage" },
@@ -251,28 +251,36 @@ export default function MedisoDashboardTab({
 
   // Computed data from state nodes with dynamic status calculation
   const ledgerRows = useMemo(() => {
-    const liveNodes = Array.isArray(state?.nodes) ? state.nodes : [];
+    const liveNodes = Array.isArray(state?.nodes) && state.nodes.length > 0 ? state.nodes : [];
     return NCR_HOSPITALS.map((h) => {
       const live = liveNodes.find((n) => n && n.id === h.id);
-      const inv = live?.inventory_by_blood_and_age || {};
-      const stock = Object.values(inv).reduce(
-        (s, b) => s + (b ? Object.values(b).reduce((acc, v) => acc + (Number(v) || 0), 0) : 0),
-        0
-      ) || h.stock;
+      const inv = live?.inventory_by_blood_and_age;
+      
+      const stock = inv
+        ? Object.values(inv).reduce(
+            (s, b) => s + (b ? Object.values(b).reduce((acc, v) => acc + (Number(v) || 0), 0) : 0),
+            0
+          )
+        : h.stock;
+
+      const oPos = inv?.["O+"]
+        ? Object.values(inv["O+"]).reduce((s, v) => s + (Number(v) || 0), 0)
+        : Math.max(1, Math.round(stock * 0.35));
+
+      const oNeg = inv?.["O-"]
+        ? Object.values(inv["O-"]).reduce((s, v) => s + (Number(v) || 0), 0)
+        : Math.max(1, Math.round(stock * 0.08));
 
       const netBal = live ? live.net_balance : (h.status === "Shortage" ? -14 : 10);
 
       let status: "Optimal" | "<36h Surplus" | "Shortage" = "Optimal";
-      if (netBal < -5 || stock < 70) {
+      if (stock < 85 || netBal < -30) {
         status = "Shortage";
-      } else if (stock >= 98 || netBal > 10) {
+      } else if (stock >= 125 || netBal > 15) {
         status = "<36h Surplus";
       } else {
         status = "Optimal";
       }
-
-      const oPos = Math.max(8, Math.round(stock * 0.35));
-      const oNeg = Math.max(1, Math.round(stock * 0.08));
 
       return {
         ...h,
@@ -400,10 +408,35 @@ export default function MedisoDashboardTab({
       .forEach((t) => onStatusChange(t.id.replace("#", ""), "APPROVED"));
   };
 
+  const currentDonorNode = useMemo(() => {
+    const liveNodes = Array.isArray(state?.nodes) ? state.nodes : [];
+    let donorId = "ND-04";
+    if (quickRecipient === "ND-04") donorId = "ND-05";
+    else if (quickRecipient === "ND-05") donorId = "ND-11";
+    else if (quickRecipient === "ND-02") donorId = "ND-03";
+    else if (quickRecipient === "ND-07") donorId = "ND-04";
+    return liveNodes.find((n) => n && n.id === donorId);
+  }, [quickRecipient, state?.nodes]);
+
+  const donorBloodAvailable = useMemo(() => {
+    if (!currentDonorNode?.inventory_by_blood_and_age?.[quickBlood]) return 24;
+    return Object.values(currentDonorNode.inventory_by_blood_and_age[quickBlood]).reduce(
+      (s, v) => s + (Number(v) || 0),
+      0
+    );
+  }, [currentDonorNode, quickBlood]);
+
   const handleQuickSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    let donorId = "ND-04";
+    if (quickRecipient === "ND-04") donorId = "ND-05";
+    else if (quickRecipient === "ND-05") donorId = "ND-11";
+    else if (quickRecipient === "ND-02") donorId = "ND-03";
+    else if (quickRecipient === "ND-07") donorId = "ND-04";
+
     onInitiateTransfer({
       target_id: quickRecipient,
+      source_id: donorId,
       blood: quickBlood,
       units: quickUnits,
       urgency: "CRITICAL",
@@ -1139,7 +1172,7 @@ export default function MedisoDashboardTab({
             <div className="quick-right-group">
               <div className="quick-matched-readout">
                 <span className="matched-dot" />
-                <span>Matched: <strong>{matchedDonor.name}</strong> ({matchedDonor.eta})</span>
+                <span>Matched: <strong>{matchedDonor.name}</strong> ({matchedDonor.eta}) · <span style={{ color: "#15997A", fontWeight: 700 }}>{donorBloodAvailable}u {quickBlood} stock</span></span>
               </div>
 
               <button type="submit" className="quick-dispatch-submit-btn">

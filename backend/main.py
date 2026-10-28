@@ -92,7 +92,11 @@ def post_chaos(payload: ChaosPayload) -> dict[str, Any]:
 def post_transfer_request(payload: TransferRequestPayload) -> dict[str, Any]:
     sim = _ensure_sim()
     state, order = sim.create_transfer_request(
-        payload.target_id, payload.blood, payload.units, payload.urgency
+        payload.target_id,
+        payload.blood,
+        payload.units,
+        payload.urgency,
+        payload.source_id,
     )
     if order is None:
         raise HTTPException(
@@ -102,6 +106,8 @@ def post_transfer_request(payload: TransferRequestPayload) -> dict[str, Any]:
                 "for this request."
             ),
         )
+    # Coordinator dispatched: approve immediately and execute stock movement
+    state = sim.approve_transfer(order.id)
     return state.model_dump()
 
 

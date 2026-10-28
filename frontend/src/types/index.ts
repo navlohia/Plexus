@@ -123,6 +123,7 @@ export interface TickState {
 
 export interface TransferRequestInput {
   target_id: string;
+  source_id?: string;
   blood: BloodType;
   units: number;
   urgency: TransferUrgency;

@@ -58,7 +58,7 @@ const HOSPITAL_REGISTRY: Record<string, HospitalMeta> = {
   "ND-01": { code: "AIM", short: "AIIMS Trauma", fullName: "AIIMS Trauma & Dengue Center", city: "Central Delhi · Level-1 Apex Trauma", coords: [77.209, 28.567], viability: 38, urgency: 94, status: "Shortage", barColor: "crimson", stock: 96, exp36: 18, netBalance: -14, activeCourierText: "Inbound: Fortis Noida · 8u O+ PLT · 14m ETA" },
   "ND-02": { code: "SFD", short: "Safdarjung", fullName: "Safdarjung Super Specialty", city: "South Delhi · Tertiary Trauma Center", coords: [77.195, 28.552], viability: 52, urgency: 81, status: "Shortage", barColor: "crimson", stock: 49, exp36: 11, netBalance: -18, activeCourierText: "Inbound: Max Saket · 6u B+ PLT · 11m ETA · 21.9°C" },
   "ND-03": { code: "MAX", short: "Max Saket", fullName: "Max Super Specialty Saket", city: "South Delhi · Quaternary Hub", coords: [77.214, 28.530], viability: 76, urgency: 62, status: "Optimal", barColor: "amber", stock: 106, exp36: 8, netBalance: 12, activeCourierText: "Outbound: Safdarjung · 6u B+ PLT · In-Transit" },
-  "ND-04": { code: "N62", short: "Fortis Noida", fullName: "Fortis Hospital Sec-62 Noida", city: "Noida Sec-62 · Corridor Donor Hub", coords: [77.330, 28.620], viability: 89, urgency: 74, status: "Expiring", barColor: "amber", stock: 142, exp36: 28, netBalance: 24, activeCourierText: "Outbound: GTB Hospital · 8u O+ PLT · 18m ETA" },
+  "ND-04": { code: "N62", short: "Fortis Noida", fullName: "Fortis Hospital Sec-62 Noida", city: "Noida Sec-62 · Corridor Donor Hub", coords: [77.330, 28.620], viability: 89, urgency: 74, status: "Expiring", barColor: "amber", stock: 93, exp36: 28, netBalance: 24, activeCourierText: "Outbound: GTB Hospital · 8u O+ PLT · 18m ETA" },
   "ND-05": { code: "MDT", short: "Medanta Hub", fullName: "Medanta The Medicity Hub", city: "Gurugram NH-48 · Super Cluster", coords: [77.118, 28.535], viability: 84, urgency: 68, status: "Expiring", barColor: "amber", stock: 135, exp36: 24, netBalance: 18, activeCourierText: "Outbound: GTB Hospital · 6u O- PLT · 32m ETA" },
   "ND-06": { code: "FTN", short: "Fortis Okhla", fullName: "Fortis Escorts Heart Okhla", city: "South Delhi · Cardio Specialty", coords: [77.278, 28.560], viability: 71, urgency: 65, status: "Optimal", barColor: "amber", stock: 72, exp36: 7, netBalance: 6, activeCourierText: "Standing Reserve · Zero Spoilage Risk" },
   "ND-07": { code: "GTB", short: "GTB East Delhi", fullName: "GTB Hospital Dilshad Garden", city: "East Delhi · Dengue Surge Epicenter", coords: [77.309, 28.665], viability: 31, urgency: 96, status: "Shortage", barColor: "crimson", stock: 68, exp36: 19, netBalance: -18, activeCourierText: "Inbound: Medanta Hub · 6u O- Emergency Buffer" },
@@ -227,11 +227,12 @@ export default function FlightyTVMapTab({
 
   // Enriched hospital list with unified live status calculation
   const hospitalList = useMemo(() => {
-    const liveNodes = Array.isArray(state?.nodes) ? state.nodes : [];
+    const liveNodes = Array.isArray(state?.nodes) && state.nodes.length > 0 ? state.nodes : [];
     return Object.entries(HOSPITAL_REGISTRY).map(([id, meta]) => {
       const liveNode = liveNodes.find((n) => n && n.id === id);
-      const stock = liveNode
-        ? Object.values(liveNode.inventory_by_blood_and_age).reduce(
+      const inv = liveNode?.inventory_by_blood_and_age;
+      const stock = inv
+        ? Object.values(inv).reduce(
             (s, b) => s + (b ? Object.values(b).reduce((acc, v) => acc + (Number(v) || 0), 0) : 0),
             0
           )
@@ -242,10 +243,10 @@ export default function FlightyTVMapTab({
       let status: "Shortage" | "Expiring" | "Optimal" = "Optimal";
       let barColor: "crimson" | "amber" | "emerald" = "emerald";
 
-      if (netBal < -5 || stock < 70) {
+      if (stock < 85 || netBal < -30) {
         status = "Shortage";
         barColor = "crimson";
-      } else if (stock >= 98 || netBal > 10) {
+      } else if (stock >= 125 || netBal > 15) {
         status = "Expiring";
         barColor = "amber";
       } else {
@@ -258,8 +259,9 @@ export default function FlightyTVMapTab({
         ...meta,
         status,
         barColor,
-        stock: stock || meta.stock,
+        stock,
         netBalance: netBal !== undefined ? netBal : meta.netBalance,
+        liveInv: inv,
       };
     });
   }, [state.nodes]);
@@ -287,33 +289,33 @@ export default function FlightyTVMapTab({
     return hospitalList.find((h) => h.id === selectedHospitalId) || null;
   }, [hospitalList, selectedHospitalId]);
 
-  // Realistic varied ABO counts for selected hospital (Never fake 6u clones!)
+  // Realistic varied ABO counts reading from live node inventory
   const aboInventoryBreakdown = useMemo(() => {
     if (!selectedNode) return [];
     const stock = selectedNode.stock;
+    const inv = (selectedNode as any).liveInv;
 
-    // Deterministic varied distribution matching clinical blood ratios
     const counts: Record<BloodType, number> = {
-      "O-": Math.max(1, Math.round(stock * 0.06)),
-      "O+": Math.max(8, Math.round(stock * 0.35)),
-      "A-": Math.max(1, Math.round(stock * 0.04)),
-      "A+": Math.max(6, Math.round(stock * 0.23)),
-      "B-": Math.max(1, Math.round(stock * 0.04)),
-      "B+": Math.max(5, Math.round(stock * 0.21)),
-      "AB-": Math.max(0, Math.round(stock * 0.01)),
-      "AB+": Math.max(2, Math.round(stock * 0.06)),
+      "O-": inv?.["O-"] ? Object.values(inv["O-"]).reduce((s: number, v: any) => s + (Number(v) || 0), 0) : Math.max(1, Math.round(stock * 0.06)),
+      "O+": inv?.["O+"] ? Object.values(inv["O+"]).reduce((s: number, v: any) => s + (Number(v) || 0), 0) : Math.max(8, Math.round(stock * 0.35)),
+      "A-": inv?.["A-"] ? Object.values(inv["A-"]).reduce((s: number, v: any) => s + (Number(v) || 0), 0) : Math.max(1, Math.round(stock * 0.04)),
+      "A+": inv?.["A+"] ? Object.values(inv["A+"]).reduce((s: number, v: any) => s + (Number(v) || 0), 0) : Math.max(6, Math.round(stock * 0.23)),
+      "B-": inv?.["B-"] ? Object.values(inv["B-"]).reduce((s: number, v: any) => s + (Number(v) || 0), 0) : Math.max(1, Math.round(stock * 0.04)),
+      "B+": inv?.["B+"] ? Object.values(inv["B+"]).reduce((s: number, v: any) => s + (Number(v) || 0), 0) : Math.max(5, Math.round(stock * 0.21)),
+      "AB-": inv?.["AB-"] ? Object.values(inv["AB-"]).reduce((s: number, v: any) => s + (Number(v) || 0), 0) : Math.max(0, Math.round(stock * 0.01)),
+      "AB+": inv?.["AB+"] ? Object.values(inv["AB+"]).reduce((s: number, v: any) => s + (Number(v) || 0), 0) : Math.max(2, Math.round(stock * 0.06)),
     };
 
     return (Object.keys(counts) as BloodType[]).map((bt) => {
       const units = counts[bt];
-      const maxRef = 24;
+      const maxRef = Math.max(24, Math.round(stock * 0.45));
       const fillPct = Math.min(100, Math.round((units / maxRef) * 100));
       return {
         type: bt,
         units,
         fillPct,
         isAlert: units <= 2,
-        isOptimal: units >= 12,
+        isOptimal: units >= 10,
       };
     });
   }, [selectedNode]);
