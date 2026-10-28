@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { RotateCcw, CheckCircle2, Zap, ArrowRight, ShieldCheck, Clock, Award } from "lucide-react";
+import { RotateCcw, CheckCircle2, Zap, ArrowRight, ShieldCheck, Clock, Award, Truck, AlertTriangle } from "lucide-react";
 import type { TickState } from "../../types";
 import { CRISIS_SCENARIOS, BASELINE_SCENARIO, CRISIS_BUTTONS } from "../../lib/crisisData";
 
@@ -11,38 +11,6 @@ interface SurgeTabProps {
   onNavigateToMap: () => void;
 }
 
-// 4 Primary Donor Reserve Hubs (Left Column)
-const DONOR_NODES = [
-  { id: "N62", name: "Fortis Noida", sub: "Surplus Hub · Sec-62", circleX: 48, pillX: 74, y: 55 },
-  { id: "MDT", name: "Medanta Hub", sub: "Surplus Hub · NH-48", circleX: 48, pillX: 74, y: 135 },
-  { id: "APL", name: "Apollo Sarita", sub: "Surplus Hub · Mathura Rd", circleX: 48, pillX: 74, y: 215 },
-  { id: "MAX", name: "Max Saket", sub: "Surplus Hub · Press Enclave", circleX: 48, pillX: 74, y: 295 },
-];
-
-// 3 Target Crisis Surge Nodes (Right Column)
-const CRISIS_NODES = [
-  { id: "AIM", name: "AIIMS Trauma", sub: "Central Delhi Trauma Hub", circleX: 952, pillX: 780, y: 75, accent: "#E11D48" },
-  { id: "GTB", name: "GTB East Delhi", sub: "Trans-Yamuna Epidemic Hub", circleX: 952, pillX: 780, y: 175, accent: "#D97706" },
-  { id: "SFD", name: "Safdarjung", sub: "South Delhi Trauma Wing", circleX: 952, pillX: 780, y: 275, accent: "#0284C7" },
-];
-
-// 7 Graceful Wide Bézier Routing Vessels across the Yamuna and NH-48 corridors
-const WIDE_VESSELS = [
-  { fromX: 205, fromY: 55, toX: 780, toY: 75, delay: "0s", label: "DND Express Link", tagY: 52 },
-  { fromX: 205, fromY: 55, toX: 780, toY: 175, delay: "0.5s", label: "Vikas Marg Arterial", tagY: 110 },
-  { fromX: 205, fromY: 135, toX: 780, toY: 75, delay: "0.9s", label: "NH-48 Trauma Express", tagY: 96 },
-  { fromX: 205, fromY: 135, toX: 780, toY: 275, delay: "0.2s", label: "Mehrauli Arterial", tagY: 198 },
-  { fromX: 205, fromY: 215, toX: 780, toY: 175, delay: "0.7s", label: "Barapullah Elevated", tagY: 184 },
-  { fromX: 205, fromY: 215, toX: 780, toY: 275, delay: "1.3s", label: "Ring Road South", tagY: 238 },
-  { fromX: 205, fromY: 295, toX: 780, toY: 275, delay: "0.4s", label: "Aurobindo Corridor", tagY: 292 },
-];
-
-function wideBezierPath(x1: number, y1: number, x2: number, y2: number): string {
-  const cx1 = x1 + (x2 - x1) * 0.42;
-  const cx2 = x1 + (x2 - x1) * 0.58;
-  return `M${x1},${y1} C${cx1},${y1} ${cx2},${y2} ${x2},${y2}`;
-}
-
 export default function SurgeTab({
   state: _state,
   activeCrisisId,
@@ -50,7 +18,6 @@ export default function SurgeTab({
   onStopScenario,
   onNavigateToMap,
 }: SurgeTabProps) {
-  const [animKey, setAnimKey] = useState(0);
   const [isSolving, setIsSolving] = useState(false);
 
   // Derive active scenario result from global crisisData
@@ -71,18 +38,15 @@ export default function SurgeTab({
     }
 
     setIsSolving(true);
-    setAnimKey((k) => k + 1);
     onActivateScenario(id);
 
-    // 450ms solver convergence animation
     setTimeout(() => {
       setIsSolving(false);
-    }, 450);
+    }, 350);
   };
 
   const handleStopScenario = () => {
     setIsSolving(false);
-    setAnimKey((k) => k + 1);
     onStopScenario();
   };
 
@@ -104,7 +68,7 @@ export default function SurgeTab({
     const targetPct = result.oNegProtectedPct;
     const fromUnits = displayedUnits;
     const fromPct = displayedPct;
-    const duration = 400;
+    const duration = 300;
     const step = (ts: number) => {
       if (!start) start = ts;
       const progress = Math.min((ts - start) / duration, 1);
@@ -122,16 +86,16 @@ export default function SurgeTab({
       style={{
         height: "calc(100vh - 60px)",
         overflow: "hidden",
-        padding: "16px 26px",
+        padding: "16px 24px",
         display: "flex",
         flexDirection: "column",
         gap: "14px",
-        background: "#F7F8FA",
+        background: "#F8FAFC",
         boxSizing: "border-box",
-        fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
+        fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
       }}
     >
-      {/* ── ROW 1: 3 Tactile Hardware-Toggle Crisis Cards (Spanning 100% Width) ── */}
+      {/* ── ROW 1: 3 Tactile Crisis Trigger Buttons (Plain, Simple, 100% Width) ── */}
       <div
         style={{
           display: "grid",
@@ -154,18 +118,17 @@ export default function SurgeTab({
                 alignItems: "flex-start",
                 gap: "6px",
                 padding: "14px 18px",
-                borderRadius: "16px",
+                borderRadius: "14px",
                 border: isActive ? `2px solid ${btn.accent}` : "1.5px solid #E2E8F0",
-                background: isActive ? "#FFFFFF" : "#FFFFFF",
+                background: "#FFFFFF",
                 color: "#111827",
                 cursor: "pointer",
-                transition: "all 0.22s cubic-bezier(0.22, 1, 0.36, 1)",
-                transform: isActive ? "translateY(-2px)" : "translateY(0)",
+                transition: "all 0.18s ease",
+                transform: isActive ? "translateY(-1px)" : "translateY(0)",
                 boxShadow: isActive
-                  ? `0 10px 24px -4px ${btn.accent}28, 0 2px 6px rgba(0,0,0,0.04)`
+                  ? `0 6px 18px -3px ${btn.accent}24, 0 2px 6px rgba(0,0,0,0.03)`
                   : "0 1px 3px rgba(0,0,0,0.03)",
                 textAlign: "left",
-                position: "relative",
               }}
             >
               <div
@@ -181,7 +144,7 @@ export default function SurgeTab({
                     style={{
                       fontSize: "11px",
                       fontWeight: 800,
-                      color: isActive ? btn.accent : "#9CA3AF",
+                      color: isActive ? btn.accent : "#94A3B8",
                       fontFamily: "monospace",
                       letterSpacing: "0.08em",
                     }}
@@ -190,14 +153,14 @@ export default function SurgeTab({
                   </span>
                   <span
                     style={{
-                      fontSize: "11px",
+                      fontSize: "10px",
                       fontWeight: 700,
-                      color: "#6B7280",
+                      color: "#64748B",
                       textTransform: "uppercase",
-                      letterSpacing: "0.04em",
+                      letterSpacing: "0.05em",
                     }}
                   >
-                    CRISIS VECTOR
+                    SHOCK SCENARIO
                   </span>
                 </div>
 
@@ -215,23 +178,11 @@ export default function SurgeTab({
                       borderRadius: "999px",
                       fontSize: "10px",
                       fontWeight: 800,
-                      letterSpacing: "0.04em",
+                      letterSpacing: "0.03em",
                     }}
                   >
                     {isSolving ? (
-                      <>
-                        <span
-                          style={{
-                            width: 6,
-                            height: 6,
-                            borderRadius: "50%",
-                            background: btn.accent,
-                            display: "inline-block",
-                            animation: "pulse-badge 0.8s ease-in-out infinite",
-                          }}
-                        />
-                        SOLVING...
-                      </>
+                      "SOLVING..."
                     ) : (
                       <>
                         <CheckCircle2 size={11} strokeWidth={2.8} />
@@ -246,10 +197,9 @@ export default function SurgeTab({
                       alignItems: "center",
                       gap: "4px",
                       fontSize: "10.5px",
-                      color: "#64748B",
+                      color: "#475569",
                       fontWeight: 700,
-                      background: "#F8FAFC",
-                      border: "1px solid #E2E8F0",
+                      background: "#F1F5F9",
                       padding: "2px 8px",
                       borderRadius: "6px",
                     }}
@@ -264,7 +214,7 @@ export default function SurgeTab({
                   style={{
                     fontSize: "14px",
                     fontWeight: 800,
-                    color: "#111827",
+                    color: "#0F172A",
                     lineHeight: 1.3,
                   }}
                 >
@@ -274,7 +224,7 @@ export default function SurgeTab({
                   style={{
                     margin: "2px 0 0",
                     fontSize: "11.5px",
-                    color: "#6B7280",
+                    color: "#64748B",
                     lineHeight: 1.4,
                   }}
                 >
@@ -286,24 +236,22 @@ export default function SurgeTab({
         })}
       </div>
 
-      {/* ── ROW 2: WIDESCREEN 100%-WIDTH AUTONOMOUS BIO-MESH & SOLVER STUDIO ── */}
+      {/* ── ROW 2: PLAIN, SIMPLE WORKBENCH (Zero Mess, Clean Data Presentation) ── */}
       <div
         style={{
           flex: 1,
           background: "#FFFFFF",
           border: "1px solid #E2E8F0",
-          borderRadius: "22px",
-          padding: "18px 24px",
+          borderRadius: "18px",
+          padding: "18px 22px",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          boxShadow: "0 2px 10px rgba(0, 0, 0, 0.03)",
-          overflow: "hidden",
-          position: "relative",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.02)",
           minHeight: 0,
         }}
       >
-        {/* Top Header Strip with Embedded High-Value Impact Chips */}
+        {/* Header Ribbon with High-Value Clinical Telemetry */}
         <div
           style={{
             display: "flex",
@@ -312,11 +260,11 @@ export default function SurgeTab({
             flexWrap: "wrap",
             gap: "12px",
             borderBottom: "1px solid #F1F5F9",
-            paddingBottom: "12px",
+            paddingBottom: "14px",
             flexShrink: 0,
           }}
         >
-          {/* Left Title & Status Badge */}
+          {/* Left Title & Status */}
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
               <span
@@ -328,357 +276,340 @@ export default function SurgeTab({
                   background: isSolving ? "#FEF3C7" : activeCrisisId ? "#ECFDF5" : "#EFF6FF",
                   border: `1px solid ${isSolving ? "#FDE68A" : activeCrisisId ? "#A7F3D0" : "#BFDBFE"}`,
                   padding: "3px 9px",
-                  borderRadius: "7px",
+                  borderRadius: "6px",
                   textTransform: "uppercase",
                 }}
               >
                 {isSolving
-                  ? "SOLVING 7,840 NETWORK ARCS..."
+                  ? "SOLVING NETWORK ARCS..."
                   : activeCrisisId
                   ? "OR-TOOLS MIN-COST MAX-FLOW · CONVERGED IN 14.2ms"
                   : "BASELINE OR-TOOLS DISPATCH · STEADY STATE"}
               </span>
-              <span style={{ fontSize: "11px", color: "#94A3B8" }}>·</span>
+              <span style={{ fontSize: "11px", color: "#CBD5E1" }}>·</span>
               <span style={{ fontSize: "11.5px", color: "#64748B", fontFamily: "monospace" }}>
                 {result.bannerTelemetry}
               </span>
             </div>
-            <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800, color: "#111827" }}>
+            <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800, color: "#0F172A" }}>
               {activeCrisis ? activeCrisis.label : "Baseline NCR Network Flow"}
             </h3>
           </div>
 
-          {/* Right: Embedded High-Impact Telemetry Chips (Saved from old JPG 2, taking ZERO extra column space!) */}
+          {/* Right: Key Performance Impact Chips */}
           <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-            {/* Chip 1: Stockouts */}
+            {/* Stockouts Chip */}
             <div
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "6px",
+                gap: "7px",
                 background: "#F0FDF4",
                 border: "1px solid #BBF7D0",
                 padding: "6px 12px",
                 borderRadius: "8px",
               }}
             >
-              <Clock size={13} color="#059669" />
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <span style={{ fontSize: "9px", fontWeight: 800, color: "#065F46", textTransform: "uppercase" }}>
+              <Clock size={14} color="#059669" />
+              <div>
+                <span style={{ fontSize: "9px", fontWeight: 800, color: "#065F46", textTransform: "uppercase", display: "block", lineHeight: 1 }}>
                   Stockouts Prevented
                 </span>
-                <span style={{ fontSize: "12px", fontWeight: 800, color: "#047857" }}>
-                  0 hrs <span style={{ fontSize: "10px", fontWeight: 600, color: "#059669" }}>vs {result.siloedStockouts}h Siloed</span>
+                <span style={{ fontSize: "12.5px", fontWeight: 800, color: "#047857" }}>
+                  0 hrs <span style={{ fontSize: "10.5px", fontWeight: 600, color: "#059669" }}>vs {result.siloedStockouts}h Siloed</span>
                 </span>
               </div>
             </div>
 
-            {/* Chip 2: Platelets Rescued */}
+            {/* Units Rescued Chip */}
             <div
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "6px",
+                gap: "7px",
                 background: "#EFF6FF",
                 border: "1px solid #BFDBFE",
                 padding: "6px 12px",
                 borderRadius: "8px",
               }}
             >
-              <Award size={13} color="#2563EB" />
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <span style={{ fontSize: "9px", fontWeight: 800, color: "#1E40AF", textTransform: "uppercase" }}>
+              <Award size={14} color="#2563EB" />
+              <div>
+                <span style={{ fontSize: "9px", fontWeight: 800, color: "#1E40AF", textTransform: "uppercase", display: "block", lineHeight: 1 }}>
                   Platelets Rescued
                 </span>
-                <span style={{ fontSize: "12px", fontWeight: 800, color: "#1D4ED8" }}>
-                  +{displayedUnits} u <span style={{ fontSize: "10px", fontWeight: 600, color: "#3B82F6" }}>({result.rescuedSavingsText})</span>
+                <span style={{ fontSize: "12.5px", fontWeight: 800, color: "#1D4ED8" }}>
+                  +{displayedUnits} u <span style={{ fontSize: "10.5px", fontWeight: 600, color: "#3B82F6" }}>({result.rescuedSavingsText})</span>
                 </span>
               </div>
             </div>
 
-            {/* Chip 3: O- Trauma Buffer */}
+            {/* O- Buffer Chip */}
             <div
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "6px",
+                gap: "7px",
                 background: "#FAF5FF",
                 border: "1px solid #E9D5FF",
                 padding: "6px 12px",
                 borderRadius: "8px",
               }}
             >
-              <ShieldCheck size={13} color="#7C3AED" />
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <span style={{ fontSize: "9px", fontWeight: 800, color: "#581C87", textTransform: "uppercase" }}>
+              <ShieldCheck size={14} color="#7C3AED" />
+              <div>
+                <span style={{ fontSize: "9px", fontWeight: 800, color: "#581C87", textTransform: "uppercase", display: "block", lineHeight: 1 }}>
                   Universal O- Buffer
                 </span>
-                <span style={{ fontSize: "12px", fontWeight: 800, color: "#6D28D9" }}>
-                  {displayedPct}% <span style={{ fontSize: "10px", fontWeight: 600, color: "#8B5CF6" }}>Protected</span>
+                <span style={{ fontSize: "12.5px", fontWeight: 800, color: "#6D28D9" }}>
+                  {displayedPct}% <span style={{ fontSize: "10.5px", fontWeight: 600, color: "#8B5CF6" }}>Protected</span>
                 </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ── WIDESCREEN ANIMATED ARCHITECTURAL MESH CANVAS ── */}
+        {/* ── MAIN CONTENT: PLAIN & SIMPLE 2-PANEL DATA SPLIT ── */}
         <div
           style={{
             flex: 1,
-            margin: "10px 0",
-            background: "#F8FAFC",
-            borderRadius: "16px",
-            border: "1px solid #E2E8F0",
-            position: "relative",
+            display: "grid",
+            gridTemplateColumns: "1.55fr 1fr",
+            gap: "16px",
+            margin: "12px 0",
+            minHeight: 0,
             overflow: "hidden",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
           }}
         >
-          <svg
-            key={animKey}
-            viewBox="0 0 1000 350"
-            preserveAspectRatio="xMidYMid meet"
-            style={{ width: "100%", height: "100%", maxHeight: "330px" }}
-            xmlns="http://www.w3.org/2000/svg"
+          {/* LEFT: Autonomous Emergency Dispatches Table */}
+          <div
+            style={{
+              background: "#F8FAFC",
+              border: "1px solid #E2E8F0",
+              borderRadius: "14px",
+              padding: "14px 16px",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
           >
-            <defs>
-              {/* Architectural dot grid */}
-              <pattern id="archGridWide" width="24" height="24" patternUnits="userSpaceOnUse">
-                <circle cx="3" cy="3" r="1.3" fill="#E2E8F0" />
-              </pattern>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+                <Truck size={15} color="#059669" />
+                <h4 style={{ margin: 0, fontSize: "13px", fontWeight: 800, color: "#0F172A" }}>
+                  Autonomous Emergency Dispatch Legs ({result.emergencyRoutes.length})
+                </h4>
+              </div>
+              <span style={{ fontSize: "11px", color: "#64748B", fontWeight: 600 }}>
+                Real-Time OR-Tools Solutions
+              </span>
+            </div>
 
-              {/* Bézier routing routes */}
-              {WIDE_VESSELS.map((v, i) => (
-                <path
-                  key={i}
-                  id={`wide-route-${i}`}
-                  d={wideBezierPath(v.fromX, v.fromY, v.toX, v.toY)}
-                  fill="none"
-                />
+            {/* Clean Dispatch Strip Table */}
+            <div
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+              }}
+            >
+              {result.emergencyRoutes.map((route) => (
+                <div
+                  key={route.id}
+                  style={{
+                    background: "#FFFFFF",
+                    border: "1px solid #E2E8F0",
+                    borderRadius: "10px",
+                    padding: "10px 14px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "12px",
+                  }}
+                >
+                  {/* Left: Origin & Destination */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: "240px" }}>
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        fontFamily: "monospace",
+                        color: "#475569",
+                        background: "#F1F5F9",
+                        padding: "2px 6px",
+                        borderRadius: "5px",
+                      }}
+                    >
+                      {route.id}
+                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: 800,
+                          background: "#ECFDF5",
+                          color: "#065F46",
+                          border: "1px solid #A7F3D0",
+                          padding: "2px 7px",
+                          borderRadius: "5px",
+                        }}
+                      >
+                        {route.donorCode}
+                      </span>
+                      <span style={{ fontSize: "11px", color: "#94A3B8" }}>➔</span>
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: 800,
+                          background: activeCrisisId ? "#FFF1F2" : "#EFF6FF",
+                          color: activeCrisisId ? "#BE123C" : "#1D4ED8",
+                          border: activeCrisisId ? "1px solid #FECACA" : "1px solid #BFDBFE",
+                          padding: "2px 7px",
+                          borderRadius: "5px",
+                        }}
+                      >
+                        {route.recipientCode}
+                      </span>
+                      <span style={{ fontSize: "12px", fontWeight: 700, color: "#1E293B", marginLeft: "4px" }}>
+                        {route.target_name.split(" ")[0]}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Middle: Biologic Cargo & Protocol */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1 }}>
+                    <span
+                      style={{
+                        fontSize: "11.5px",
+                        fontWeight: 800,
+                        color: "#0F172A",
+                        background: "#FEF3C7",
+                        border: "1px solid #FDE68A",
+                        padding: "2px 8px",
+                        borderRadius: "5px",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {route.cargo}
+                    </span>
+                    <span style={{ fontSize: "11px", color: "#64748B", whiteSpace: "nowrap" }}>
+                      {route.reason}
+                    </span>
+                  </div>
+
+                  {/* Right: ETA & Status */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                    <span style={{ fontSize: "11px", fontWeight: 700, color: "#059669", fontFamily: "monospace" }}>
+                      {route.eta}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        background: "#F0FDF4",
+                        color: "#166534",
+                        border: "1px solid #BBF7D0",
+                        padding: "2px 7px",
+                        borderRadius: "999px",
+                      }}
+                    >
+                      En Route
+                    </span>
+                  </div>
+                </div>
               ))}
-            </defs>
+            </div>
+          </div>
 
-            {/* Background dot pattern */}
-            <rect width="100%" height="100%" fill="url(#archGridWide)" />
+          {/* RIGHT: Siloed vs Plexus Comparison & Clinical Safety Card */}
+          <div
+            style={{
+              background: "#F8FAFC",
+              border: "1px solid #E2E8F0",
+              borderRadius: "14px",
+              padding: "16px 18px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "14px" }}>
+                <AlertTriangle size={15} color="#D97706" />
+                <h4 style={{ margin: 0, fontSize: "13px", fontWeight: 800, color: "#0F172A" }}>
+                  Siloed Failure vs. Plexus Mesh Resilience
+                </h4>
+              </div>
 
-            {/* Subtle Tier Column Header Guidelines */}
-            <text x="130" y="24" fill="#94A3B8" fontSize="10" fontWeight="800" textAnchor="middle" letterSpacing="0.08em">
-              SURPLUS DONOR HUBS (SUPPLY TIER)
-            </text>
-            <text x="500" y="24" fill="#94A3B8" fontSize="10" fontWeight="800" textAnchor="middle" letterSpacing="0.08em">
-              GOOGLE OR-TOOLS HIGHWAY ROUTING BUS (TRANSIT TIER)
-            </text>
-            <text x="860" y="24" fill="#94A3B8" fontSize="10" fontWeight="800" textAnchor="middle" letterSpacing="0.08em">
-              DISRUPTED SURGE HOSPITALS (DEMAND TIER)
-            </text>
+              {/* Comparison Bars */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "16px" }}>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11.5px", marginBottom: "4px" }}>
+                    <span style={{ color: "#64748B", fontWeight: 600 }}>Traditional Siloed Response</span>
+                    <span style={{ color: "#E11D48", fontWeight: 800 }}>78% Unmet Demand / Spoilage</span>
+                  </div>
+                  <div style={{ height: "8px", background: "#E2E8F0", borderRadius: "999px", overflow: "hidden" }}>
+                    <div style={{ width: "78%", height: "100%", background: "#E11D48", borderRadius: "999px" }} />
+                  </div>
+                </div>
 
-            {/* Curved Wide Bezier Vessels */}
-            {WIDE_VESSELS.map((v, i) => (
-              <path
-                key={i}
-                d={wideBezierPath(v.fromX, v.fromY, v.toX, v.toY)}
-                stroke="#10B981"
-                strokeWidth="2.5"
-                strokeOpacity={activeCrisisId ? "0.55" : "0.3"}
-                fill="none"
-                strokeLinecap="round"
-              />
-            ))}
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11.5px", marginBottom: "4px" }}>
+                    <span style={{ color: "#64748B", fontWeight: 600 }}>Plexus Autonomous Mesh</span>
+                    <span style={{ color: "#059669", fontWeight: 800 }}>99.2% Demand Fulfilled · 1.2% Waste</span>
+                  </div>
+                  <div style={{ height: "8px", background: "#E2E8F0", borderRadius: "999px", overflow: "hidden" }}>
+                    <div style={{ width: "99.2%", height: "100%", background: "#059669", borderRadius: "999px" }} />
+                  </div>
+                </div>
+              </div>
 
-            {/* Live Floating Highway Corridor Waypoint Badges in Center Corridor */}
-            {WIDE_VESSELS.map((v, i) => (
-              <g key={`corridor-tag-${i}`} opacity={activeCrisisId ? 0.95 : 0.65}>
-                <rect
-                  x="440"
-                  y={v.tagY - 9}
-                  width="120"
-                  height="18"
-                  rx="9"
-                  fill="#FFFFFF"
-                  stroke="#CBD5E1"
-                  strokeWidth="1"
-                />
-                <text
-                  x="500"
-                  y={v.tagY + 3.5}
-                  textAnchor="middle"
-                  fill="#475569"
-                  fontSize="8.5"
-                  fontWeight="700"
-                  fontFamily="monospace"
-                >
-                  {v.label}
-                </text>
-              </g>
-            ))}
+              {/* Key Clinical Safeguards */}
+              <div style={{ borderTop: "1px solid #E2E8F0", paddingTop: "12px" }}>
+                <span style={{ fontSize: "10px", fontWeight: 800, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: "8px" }}>
+                  Active Clinical Safeguards
+                </span>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "11.5px", color: "#334155" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <CheckCircle2 size={13} color="#059669" />
+                    <span><strong>FEFO Expiry Rescue:</strong> Oldest viable units rerouted first</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <CheckCircle2 size={13} color="#059669" />
+                    <span><strong>Asymmetric ABO Match:</strong> Strict iso-group compatibility</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <CheckCircle2 size={13} color="#059669" />
+                    <span><strong>Green Corridor Transit:</strong> Pre-cleared arterial highway paths</span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            {/* Animated Glowing Packets along Wide Vessels */}
-            {WIDE_VESSELS.map((v, i) => (
-              <g key={`pkt-${i}`}>
-                {/* Outer Glow Halo */}
-                <circle r="7" fill="#10B981" opacity="0.25">
-                  <animateMotion dur={activeCrisisId ? "2.2s" : "3.0s"} repeatCount="indefinite" begin={v.delay}>
-                    <mpath href={`#wide-route-${i}`} />
-                  </animateMotion>
-                </circle>
-                {/* Core Packet */}
-                <circle r="4" fill="#059669" opacity="0.95" stroke="#FFFFFF" strokeWidth="1.5">
-                  <animateMotion dur={activeCrisisId ? "2.2s" : "3.0s"} repeatCount="indefinite" begin={v.delay}>
-                    <mpath href={`#wide-route-${i}`} />
-                  </animateMotion>
-                </circle>
-              </g>
-            ))}
-
-            {/* ── LEFT: 4 Surplus Donor Hubs (Spacious & Crisp) ── */}
-            {DONOR_NODES.map((n) => (
-              <g key={n.id}>
-                {/* Donor Card Pill */}
-                <rect
-                  x={n.pillX}
-                  y={n.y - 14}
-                  width="130"
-                  height="28"
-                  rx="14"
-                  fill="#FFFFFF"
-                  stroke="#A7F3D0"
-                  strokeWidth="1.5"
-                />
-                <text
-                  x={n.pillX + 10}
-                  y={n.y - 1}
-                  fill="#065F46"
-                  fontSize="11"
-                  fontWeight="800"
-                >
-                  {n.name}
-                </text>
-                <text
-                  x={n.pillX + 10}
-                  y={n.y + 10}
-                  fill="#64748B"
-                  fontSize="8"
-                  fontWeight="600"
-                >
-                  {n.sub}
-                </text>
-
-                {/* Left Circle Node */}
-                <circle cx={n.circleX} cy={n.y} r="16" fill="#10B981" stroke="#FFFFFF" strokeWidth="2.5" />
-                <text
-                  x={n.circleX}
-                  y={n.y + 4}
-                  textAnchor="middle"
-                  fill="#FFFFFF"
-                  fontSize="9"
-                  fontWeight="800"
-                >
-                  {n.id}
-                </text>
-
-                {/* Outbound Anchor Connector Dot */}
-                <circle cx="205" cy={n.y} r="4" fill="#10B981" />
-              </g>
-            ))}
-
-            {/* ── RIGHT: 3 Deficit Crisis Nodes (Radar Waves & High-Contrast Accents) ── */}
-            {CRISIS_NODES.map((n, ni) => {
-              const accent = ni === 0 ? "#E11D48" : ni === 1 ? "#D97706" : "#0284C7";
-              return (
-                <g key={n.id}>
-                  {/* Inbound Anchor Connector Dot */}
-                  <circle cx="780" cy={n.y} r="4" fill={accent} />
-
-                  {/* Pulsing Radar Wave 1 */}
-                  <circle cx={n.circleX} cy={n.y} r="28" fill="none" stroke={accent} strokeWidth="1.5" opacity="0">
-                    <animate
-                      attributeName="r"
-                      from="18"
-                      to="38"
-                      dur="1.8s"
-                      repeatCount="indefinite"
-                      begin={`${ni * 0.4}s`}
-                    />
-                    <animate
-                      attributeName="opacity"
-                      from="0.65"
-                      to="0"
-                      dur="1.8s"
-                      repeatCount="indefinite"
-                      begin={`${ni * 0.4}s`}
-                    />
-                  </circle>
-                  {/* Pulsing Radar Wave 2 */}
-                  <circle cx={n.circleX} cy={n.y} r="20" fill="none" stroke={accent} strokeWidth="1.8" opacity="0">
-                    <animate
-                      attributeName="r"
-                      from="14"
-                      to="26"
-                      dur="1.8s"
-                      repeatCount="indefinite"
-                      begin={`${ni * 0.4 + 0.3}s`}
-                    />
-                    <animate
-                      attributeName="opacity"
-                      from="0.75"
-                      to="0"
-                      dur="1.8s"
-                      repeatCount="indefinite"
-                      begin={`${ni * 0.4 + 0.3}s`}
-                    />
-                  </circle>
-
-                  {/* Crisis Card Pill */}
-                  <rect
-                    x={n.pillX}
-                    y={n.y - 14}
-                    width="145"
-                    height="28"
-                    rx="14"
-                    fill="#FFFFFF"
-                    stroke={`${accent}55`}
-                    strokeWidth="1.5"
-                  />
-                  <text
-                    x={n.pillX + 12}
-                    y={n.y - 1}
-                    fill="#111827"
-                    fontSize="11"
-                    fontWeight="800"
-                  >
-                    {n.name}
-                  </text>
-                  <text
-                    x={n.pillX + 12}
-                    y={n.y + 10}
-                    fill={accent}
-                    fontSize="8.5"
-                    fontWeight="700"
-                  >
-                    {activeCrisisId ? "Active Shock · Restocking" : "Target Node · Steady"}
-                  </text>
-
-                  {/* Right Circle Node */}
-                  <circle cx={n.circleX} cy={n.y} r="16" fill={accent} stroke="#FFFFFF" strokeWidth="2.5" />
-                  <text
-                    x={n.circleX}
-                    y={n.y + 4}
-                    textAnchor="middle"
-                    fill="#FFFFFF"
-                    fontSize="9"
-                    fontWeight="800"
-                  >
-                    {n.id}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
+            {/* Network Latency Badge */}
+            <div
+              style={{
+                background: "#FFFFFF",
+                border: "1px solid #E2E8F0",
+                borderRadius: "8px",
+                padding: "8px 12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginTop: "10px",
+              }}
+            >
+              <span style={{ fontSize: "11px", color: "#64748B" }}>Solver Convergence:</span>
+              <span style={{ fontSize: "11px", fontWeight: 800, color: "#0F172A", fontFamily: "monospace" }}>
+                14.2ms (7,840 arcs)
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* ── BOTTOM ACTION & TELEMETRY FOOTER BAR ── */}
+        {/* ── FOOTER BAR: ACTION CONTROLS ── */}
         <div
           style={{
             display: "flex",
@@ -691,7 +622,7 @@ export default function SurgeTab({
             gap: "10px",
           }}
         >
-          {/* Left Solver Monospace Telemetry */}
+          {/* Left Telemetry */}
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span
               style={{
@@ -703,7 +634,7 @@ export default function SurgeTab({
               }}
             />
             <span style={{ fontSize: "11.5px", color: "#64748B", fontFamily: "monospace" }}>
-              7,840 Network Arcs Evaluated · Google OR-Tools Min-Cost Max-Flow · Zero Unmet Demand
+              Google OR-Tools Multi-Commodity Max-Flow · 25 Delhi-NCR Hospitals Synchronized
             </span>
           </div>
 
@@ -717,7 +648,7 @@ export default function SurgeTab({
                   background: "#FEF2F2",
                   color: "#BE123C",
                   border: "1px solid #FECACA",
-                  borderRadius: "10px",
+                  borderRadius: "9px",
                   padding: "8px 16px",
                   fontSize: "12px",
                   fontWeight: 700,
@@ -739,7 +670,7 @@ export default function SurgeTab({
               style={{
                 background: "#15997A",
                 color: "#FFFFFF",
-                borderRadius: "10px",
+                borderRadius: "9px",
                 padding: "8px 18px",
                 fontSize: "12.5px",
                 fontWeight: 700,
@@ -749,7 +680,7 @@ export default function SurgeTab({
                 alignItems: "center",
                 gap: "7px",
                 transition: "all 0.15s ease",
-                boxShadow: "0 2px 6px rgba(21, 153, 122, 0.28)",
+                boxShadow: "0 2px 6px rgba(21, 153, 122, 0.25)",
               }}
             >
               <span>Push Emergency Routes to Live Map</span>
