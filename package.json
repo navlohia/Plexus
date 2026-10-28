@@ -1,0 +1,13 @@
+{
+  "name": "plexus",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "build": "npm --prefix frontend run build && node -e \"const fs=require('fs'); if(fs.existsSync('frontend/dist')){ fs.cpSync('frontend/dist', 'dist', {recursive:true}); }\"",
+    "dev": "npm --prefix frontend run dev",
+    "preview": "npm --prefix frontend run preview"
+  }
+}

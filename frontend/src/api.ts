@@ -34,6 +34,12 @@ export const tick = (hours = 6) =>
     body: JSON.stringify({ hours }),
   });
 
+export const step = (hours = 6) =>
+  request("/api/step", {
+    method: "POST",
+    body: JSON.stringify({ hours }),
+  });
+
 export const setMode = (mode: Mode) =>
   request("/api/mode", {
     method: "POST",
@@ -46,8 +52,20 @@ export const injectChaos = (event: string) =>
     body: JSON.stringify({ event }),
   });
 
+export const surge = (event: string) =>
+  request("/api/surge", {
+    method: "POST",
+    body: JSON.stringify({ event }),
+  });
+
 export const createTransferRequest = (payload: TransferRequestInput) =>
   request("/api/transfers/request", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+export const dispatch = (payload: TransferRequestInput) =>
+  request("/api/dispatch", {
     method: "POST",
     body: JSON.stringify(payload),
   });
