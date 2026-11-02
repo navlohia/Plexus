@@ -9,6 +9,15 @@
     "build": "npm --prefix frontend run build && node -e \"const fs=require('fs'); if(fs.existsSync('frontend/dist')){ fs.cpSync('frontend/dist', 'dist', {recursive:true}); }\"",
     "dev": "npm --prefix frontend run dev",
     "preview": "npm --prefix frontend run preview"
+  },
+  "dependencies": {
+    "@deck.gl/core": "^9.4.1",
+    "@deck.gl/layers": "^9.4.1",
+    "@deck.gl/mapbox": "^9.4.1",
+    "@deck.gl/react": "^9.4.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5"
   }
 }
-

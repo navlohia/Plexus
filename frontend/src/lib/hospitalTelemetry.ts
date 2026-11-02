@@ -471,7 +471,7 @@ export function recalculateHospitalTelemetry(
   if (netBalance < -5) {
     status = "Shortage";
     statusColor = "#E11D48";
-  } else if (expiringUnder36h >= 14 || netBalance > 25) {
+  } else if (expiringUnder36h >= 14 || netBalance > 22) {
     status = "<36h Surplus";
     statusColor = "#F59E0B";
   } else {
@@ -481,7 +481,7 @@ export function recalculateHospitalTelemetry(
 
   // Supply viability & burn index
   const supplyRatio = Math.min(100, Math.round((totalStock / targetBaseline) * 100));
-  const burnIndex = Math.max(20, Math.min(99, Math.round(100 - (supplyRatio * 0.65))));
+  const burnIndex = Math.max(20, Math.min(99, Math.round(100 - (supplyRatio * 0.68))));
 
   return {
     id: nodeId,

@@ -12,7 +12,7 @@
   --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
 
   /* Mediso Light Color Palette */
-  --mediso-bg: #F7F8FA;
+  --mediso-bg: #F3EEE4;
   --mediso-surface: #FFFFFF;
   --mediso-border: #ECEEF2;
   --mediso-border-subtle: #F1F3F5;
@@ -38,7 +38,8 @@
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-color: var(--mediso-bg);
+  background-color: #F3EEE4 !important;
+  background: #F3EEE4 !important;
   font-family: var(--font-main);
   color: var(--ink-primary);
   -webkit-font-smoothing: antialiased;
@@ -48,8 +49,9 @@
 .ws-topbar-clean {
   height: 60px;
   min-height: 60px;
-  background: var(--mediso-surface);
-  border-bottom: 1px solid var(--mediso-border);
+  background: transparent !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
   padding: 0 28px;
   display: flex;
   align-items: center;
@@ -194,21 +196,21 @@
 .flighty-tv-outer-shell {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 14px 20px 18px;
+  gap: 16px;
+  padding: 12px 20px 18px;
   height: calc(100vh - 60px);
   box-sizing: border-box;
   overflow: hidden;
-  background: var(--mediso-bg);
+  background: #F3EEE4 !important;
 }
 
 /* ── Docked Top Black Banner (Placed outside the clipped map frame so 0 lines poke above) ── */
 .flighty-docked-banner {
   height: 56px;
   min-height: 56px;
-  border-radius: 16px;
-  background: linear-gradient(90deg, #121316 0%, #23272F 100%);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  border-radius: 999px;
+  background: #111827;
+  box-shadow: 0 4px 16px rgba(17, 24, 39, 0.12);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -313,11 +315,11 @@
 .flighty-clipped-map-frame {
   flex: 1;
   position: relative;
-  border-radius: 20px;
+  border-radius: 28px !important;
   overflow: hidden;
-  border: 1px solid #E5E7EB;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  background: #E5E7EB;
+  border: 1px solid rgba(17, 24, 39, 0.08) !important;
+  box-shadow: 0 2px 10px rgba(17, 24, 39, 0.04) !important;
+  background: transparent !important;
 }
 
 .flighty-map-canvas {
@@ -326,33 +328,71 @@
   z-index: 1;
 }
 
-/* White Fog Scrim */
+/* Soft Fog Scrim (Spec §11: soft fade into paper-raised, no hard edge or off-color background) */
 .flighty-white-fog-scrim {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 480px;
   pointer-events: none;
   z-index: 5;
   background: linear-gradient(90deg,
-      #F8F9FA 0%,
-      #F8F9FA 20%,
-      rgba(248, 249, 250, 0.92) 28%,
-      rgba(248, 249, 250, 0.4) 38%,
-      rgba(248, 249, 250, 0) 50%);
+      rgba(250, 247, 240, 0.98) 0%,
+      rgba(250, 247, 240, 0.94) 340px,
+      rgba(250, 247, 240, 0.65) 400px,
+      rgba(250, 247, 240, 0.22) 440px,
+      rgba(250, 247, 240, 0) 480px);
+}
+@media (max-width: 1400px) {
+  .flighty-white-fog-scrim {
+    width: 440px;
+    background: linear-gradient(90deg,
+        rgba(250, 247, 240, 0.98) 0%,
+        rgba(250, 247, 240, 0.94) 300px,
+        rgba(250, 247, 240, 0.65) 360px,
+        rgba(250, 247, 240, 0.22) 400px,
+        rgba(250, 247, 240, 0) 440px);
+  }
 }
 
-/* Left Stack of Light-Gray Flighty Cards */
+/* Left Stack of Flighty Cards (Spec §11: width 400px, 360px below 1400px) */
 .flighty-left-cards-stack {
   position: absolute;
   top: 16px;
   left: 18px;
   bottom: 16px;
-  width: 320px;
+  width: 400px;
   z-index: 40;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-right: 6px;
+  padding-right: 8px;
+  padding-bottom: 52px;
+  scroll-behavior: smooth;
+}
+@media (max-width: 1400px) {
+  .flighty-left-cards-stack {
+    width: 360px;
+  }
+}
+
+/* Soft 48px fade at the bottom of the list panel (Spec §11) */
+.flighty-left-stack-fade {
+  position: absolute;
+  bottom: 0;
+  left: 18px;
+  width: 400px;
+  height: 48px;
+  pointer-events: none;
+  z-index: 41;
+  background: linear-gradient(to bottom, rgba(250, 247, 240, 0) 0%, rgba(250, 247, 240, 0.98) 100%);
+}
+@media (max-width: 1400px) {
+  .flighty-left-stack-fade {
+    width: 360px;
+  }
 }
 
 .flighty-left-cards-stack::-webkit-scrollbar {
@@ -360,7 +400,7 @@
 }
 
 .flighty-left-cards-stack::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.12);
+  background: rgba(20, 27, 45, 0.14);
   border-radius: 4px;
 }
 
@@ -373,17 +413,21 @@
   grid-template-columns: 44px 1fr;
   gap: 12px;
   align-items: start;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
   box-sizing: border-box;
+  position: relative;
 }
 
-.flighty-card:hover {
+.flighty-card:hover,
+.flighty-card.flighty-card-hovered {
   background: #E8EAEF;
 }
 
+/* Selected row: 3px left accent bar in state color + slightly raised background (no thick black outline per Spec §11) */
 .flighty-card.flighty-card-selected {
-  background: #FFFFFF;
-  box-shadow: 0 0 0 2px #111827, 0 8px 20px rgba(0, 0, 0, 0.1);
+  background: #FAF7F0;
+  box-shadow: 0 4px 14px rgba(20, 27, 45, 0.08);
+  border-left: 3px solid var(--row-accent-color, #17805F) !important;
 }
 
 .flighty-card-code {
@@ -451,7 +495,7 @@
   border-radius: 999px;
 }
 
-/* ── Interactive Map Marker Buttons (Guaranteed 1-Click Hit Target) ── */
+/* ── Interactive Map Marker Buttons (Guaranteed 1-Click Hit Target >= 28px per Spec §4) ── */
 .flighty-pin-btn {
   display: flex;
   flex-direction: column;
@@ -461,16 +505,20 @@
   border: none;
   cursor: pointer;
   pointer-events: auto;
-  min-width: 48px;
-  min-height: 44px;
+  min-width: 32px;
+  min-height: 32px;
   padding: 4px;
   z-index: 10;
-  transition: transform 0.15s ease;
+  transition: transform 0.15s ease, opacity 0.2s ease;
 }
 
 .flighty-pin-btn:hover,
 .flighty-pin-btn.pin-active {
   transform: scale(1.18);
+}
+
+.flighty-pin-btn.pin-dimmed {
+  opacity: 0.35 !important;
 }
 
 .flighty-pin-dot {
@@ -479,272 +527,220 @@
   border-radius: 999px;
   border: 2.5px solid #FFFFFF;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
+.flighty-pin-dot.dot-highlighted {
+  transform: scale(1.35);
+  box-shadow: 0 0 0 4px rgba(21, 153, 122, 0.38), 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.flighty-pin-dot.dot-selected {
+  transform: scale(1.35);
+  box-shadow: 0 0 0 2px #141B2D, 0 2px 10px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Pill with >= 32px hit area and clickable pointer events per Spec §4 */
 .flighty-pin-pill {
-  margin-top: 4px;
+  position: absolute;
   background: #FFFFFF;
-  color: #1F2937;
+  color: #111827;
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
-  padding: 2px 8px;
+  padding: 4px 10px;
+  min-height: 32px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 999px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 6px rgba(17, 24, 39, 0.14);
+  border: 1px solid rgba(17, 24, 39, 0.08);
   letter-spacing: 0.03em;
   white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 12;
+}
+
+.flighty-pin-pill.pill-anchor-bottom {
+  top: calc(50% + 14px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.flighty-pin-pill.pill-anchor-top {
+  bottom: calc(50% + 14px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.flighty-pin-pill.pill-anchor-right {
+  left: calc(50% + 14px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.flighty-pin-pill.pill-anchor-left {
+  right: calc(50% + 14px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.flighty-pin-pill.pill-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.flighty-pin-pill.pill-visible {
+  opacity: 1;
+}
+
+.flighty-pin-pill.pill-highlighted {
+  opacity: 1 !important;
+  z-index: 38 !important;
+  box-shadow: 0 0 0 2px #111827, 0 4px 12px rgba(17, 24, 39, 0.22) !important;
+}
+
+.flighty-card-hovered {
+  background: #E2E6ED !important;
+  transform: translateX(4px);
+  box-shadow: 0 2px 10px rgba(17, 24, 39, 0.08);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   FLIGHTY AIRPORT TERMINAL PASS DRAWER (DESIGN.md Section 1C)
+   HOSPITAL DETAIL SIDE SHEET (LANDING_SPEC v5 Section 14)
    ═══════════════════════════════════════════════════════════════════ */
-.flighty-terminal-pass {
+.hospital-side-sheet {
   position: absolute;
-  bottom: 18px;
-  right: 18px;
-  width: 390px;
-  max-height: calc(100% - 36px);
-  background: #FFFFFF;
-  border-radius: 18px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18), 0 4px 16px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--mediso-border);
-  z-index: 45;
-  overflow-y: auto;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 392px;
+  background: var(--color-paper-raised, #FAF7F0);
+  border-left: 1px solid rgba(20, 27, 45, 0.10);
+  border-top-right-radius: 28px;
+  border-bottom-right-radius: 28px;
+  box-shadow: none !important;
   display: flex;
   flex-direction: column;
-}
-
-.terminal-pass-header {
-  background: #111317;
-  color: #FFFFFF;
-  padding: 14px 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-top-left-radius: 17px;
-  border-top-right-radius: 17px;
-}
-
-.terminal-pass-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.terminal-pass-code {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 800;
-  background: rgba(255, 255, 255, 0.16);
-  color: #FFFFFF;
-  padding: 3px 8px;
-  border-radius: 6px;
-  letter-spacing: 0.04em;
-}
-
-.terminal-pass-name {
-  font-size: 14.5px;
-  font-weight: 700;
-  color: #FFFFFF;
-  line-height: 1.2;
-}
-
-.terminal-pass-close {
-  background: rgba(255, 255, 255, 0.12);
-  border: none;
-  color: #D1D5DB;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.terminal-pass-close:hover {
-  background: rgba(255, 255, 255, 0.25);
-  color: #FFFFFF;
-}
-
-.terminal-telemetry-strip {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  background: #F8F9FA;
-  border-bottom: 1px solid var(--mediso-border);
-  padding: 10px 14px;
-  gap: 8px;
-}
-
-.terminal-telemetry-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.telemetry-label {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--ink-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.telemetry-val {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--ink-primary);
-  margin-top: 2px;
-}
-
-.terminal-section-title {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--ink-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 12px 18px 6px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.terminal-abo-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  padding: 6px 18px 12px;
-}
-
-.terminal-abo-card {
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
-  border-radius: 9px;
-  padding: 7px 6px 6px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.terminal-abo-card.card-alert-red {
-  border-color: #FECACA;
-  background: #FEF2F2;
-}
-
-.terminal-abo-card.card-alert-red .abo-tag {
-  color: #DC2626;
-}
-
-.terminal-abo-card.card-alert-red .abo-qty {
-  color: #B91C1C;
-}
-
-.terminal-abo-card.card-optimal-green {
-  border-color: #A7F3D0;
-  background: #F0FDF4;
-}
-
-.terminal-abo-card.card-optimal-green .abo-tag {
-  color: #059669;
-}
-
-.terminal-abo-card.card-optimal-green .abo-qty {
-  color: #047857;
-}
-
-.abo-tag {
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--ink-primary);
-  font-family: var(--font-mono);
-}
-
-.abo-qty {
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--ink-primary);
-  margin: 2px 0 5px;
-}
-
-.abo-stock-bar {
-  width: 100%;
-  height: 3px;
-  background: #E5E7EB;
-  border-radius: 999px;
+  z-index: 50;
   overflow: hidden;
+  font-family: var(--font-main, 'Plus Jakarta Sans', -apple-system, sans-serif);
+  animation: sheetEnter 420ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: auto !important;
 }
 
-.abo-bar-fill {
-  height: 100%;
-  border-radius: 999px;
+@media (min-width: 1600px) {
+  .hospital-side-sheet {
+    width: 420px;
+  }
 }
 
-.terminal-courier-feed {
-  padding: 0 18px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
+@keyframes sheetEnter {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-.courier-feed-row {
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  padding: 6px 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 11.5px;
+.hospital-side-sheet.sheet-closing {
+  animation: sheetExit 260ms cubic-bezier(0.4, 0, 1, 1) forwards !important;
 }
 
-.courier-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--mediso-emerald);
-  margin-right: 6px;
-  display: inline-block;
+@keyframes sheetExit {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(24px);
+  }
 }
 
-.courier-callsign {
-  font-weight: 700;
-  color: var(--ink-primary);
-  font-family: var(--font-mono);
+/* Stagger sections by 50ms */
+.sheet-section {
+  border-bottom: 1px solid rgba(20, 27, 45, 0.08);
+  padding: 24px 24px;
+  animation: sectionEnter 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.courier-cargo {
-  color: var(--ink-secondary);
-  font-weight: 600;
+.sheet-section-1 { animation-delay: 0ms; }
+.sheet-section-2 { animation-delay: 50ms; }
+.sheet-section-3 { animation-delay: 100ms; }
+.sheet-section-4 { animation-delay: 150ms; }
+.sheet-section-5 { animation-delay: 200ms; }
+
+@keyframes sectionEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.courier-eta {
-  color: #D97706;
-  font-weight: 600;
+@media (max-width: 700px) {
+  .hospital-side-sheet {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    width: 100% !important;
+    border-top-left-radius: 24px !important;
+    border-top-right-radius: 24px !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-left: none !important;
+    border-top: 1px solid rgba(20, 27, 45, 0.10) !important;
+    animation: sheetMobileEnter 360ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes sheetMobileEnter {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .hospital-side-sheet.sheet-closing {
+    animation: sheetMobileExit 260ms cubic-bezier(0.4, 0, 1, 1) forwards !important;
+  }
+
+  @keyframes sheetMobileExit {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+  }
 }
 
-.terminal-dispatch-btn {
-  margin: 0 18px 16px;
-  height: 38px;
-  background: var(--mediso-emerald);
-  color: #FFFFFF;
-  border: none;
-  border-radius: 10px;
-  font-size: 12.5px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  box-shadow: 0 2px 8px rgba(21, 153, 122, 0.25);
-}
-
-.terminal-dispatch-btn:hover {
-  background: #118267;
+@media (prefers-reduced-motion: reduce) {
+  .hospital-side-sheet,
+  .hospital-side-sheet.sheet-closing,
+  .sheet-section {
+    animation: none !important;
+    transition: opacity 200ms ease !important;
+    transform: none !important;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -3093,9 +3089,14 @@
   .flighty-filter-pills {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
     max-width: 100% !important;
     padding-bottom: 2px !important;
     gap: 4px !important;
+  }
+
+  .flighty-filter-pills::-webkit-scrollbar {
+    display: none !important;
   }
 
   .flighty-pill-btn {
@@ -3425,9 +3426,14 @@
   .flighty-filter-pills {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
     max-width: 100% !important;
     padding-bottom: 2px !important;
     gap: 4px !important;
+  }
+
+  .flighty-filter-pills::-webkit-scrollbar {
+    display: none !important;
   }
 
   .flighty-pill-btn {
@@ -3663,4 +3669,39 @@
     gap: 12px !important;
     margin-bottom: 24px !important;
   }
+}
+
+/* MapStage Transparency for persistent map */
+.ws-fullbleed-root.ws-map-mode {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+.flighty-tv-outer-shell {
+  background: transparent !important;
+}
+.flighty-clipped-map-frame {
+  background: transparent !important;
+  pointer-events: none;
+}
+
+/* Interactive workspace UI elements */
+.ws-topbar-clean,
+.flighty-docked-banner,
+.flighty-left-cards-stack,
+.flighty-card,
+.flighty-bottom-bar,
+.flighty-floating-filter-bar,
+.hospital-side-sheet,
+.flighty-details-drawer,
+.flighty-mobile-drawer {
+  pointer-events: auto !important;
+}
+
+/* While entering workspace, workspace UI elements start hidden until GSAP animates them */
+.app-route-view.ws-transition-entering .ws-topbar-clean,
+.app-route-view.ws-transition-entering .flighty-docked-banner,
+.app-route-view.ws-transition-entering .flighty-left-cards-stack,
+.app-route-view.ws-transition-entering .flighty-panel-bottom-fade,
+.app-route-view.ws-transition-entering .flighty-pin-pill {
+  opacity: 0;
 }

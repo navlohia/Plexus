@@ -704,6 +704,45 @@ export default function MedisoDashboardTab({
       </div>
 
       {/* ── SUB-VIEW A: ANALYTICS & HOSPITAL LEDGER ── */}
+              {/* Agitator Telemetry Widget */}
+        <div style={{
+          background: "var(--ws-surface)",
+          border: "1px solid var(--ws-border)",
+          borderRadius: 12,
+          padding: "14px 20px",
+          marginBottom: 14,
+          display: "flex",
+          alignItems: "center",
+          gap: 24,
+          flexWrap: "wrap",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+            <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#10B981", boxShadow: "0 0 8px rgba(16,185,129,0.7)" }} />
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ws-text-3)", fontFamily: "var(--ws-font-mono)" }}>
+              22.0°C Isothermal Agitator Telemetry
+            </span>
+          </div>
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap", flex: 1 }}>
+            {[
+              { label: "Core Temp",  value: "22.0°C"   },
+              { label: "Humidity",   value: "58%"       },
+              { label: "Vibration",  value: "0.18g"     },
+              { label: "Agitation",  value: "72 RPM"    },
+              { label: "Cold-Chain", value: "COMPLIANT" },
+            ].map(m => (
+              <div key={m.label}>
+                <div style={{ fontSize: 10, color: "var(--ws-text-4)", marginBottom: 2 }}>{m.label}</div>
+                <div style={{ fontFamily: "var(--ws-font-mono)", fontSize: 13, fontWeight: 700, color: "#10B981", fontVariantNumeric: "tabular-nums" }}>{m.value}</div>
+              </div>
+            ))}
+          </div>
+          <svg width="110" height="34" viewBox="0 0 110 34" style={{ flexShrink: 0 }}>
+            <defs><linearGradient id="ag1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#10B981" stopOpacity="0.3"/><stop offset="100%" stopColor="#10B981" stopOpacity="0"/></linearGradient></defs>
+            <path d="M0,17 C9,17 13,9 18,17 C23,25 27,17 33,17 C39,17 43,11 49,17 C55,23 59,17 65,17 C71,17 75,10 81,17 C87,24 91,17 96,17 C101,17 106,13 110,17" fill="none" stroke="#10B981" strokeWidth="1.5" opacity="0.85"/>
+            <path d="M0,17 C9,17 13,9 18,17 C23,25 27,17 33,17 C39,17 43,11 49,17 C55,23 59,17 65,17 C71,17 75,10 81,17 C87,24 91,17 96,17 C101,17 106,13 110,17 L110,34 L0,34 Z" fill="url(#ag1)"/>
+          </svg>
+        </div>
+
       {subView === "analytics" && (
         <>
           {/* Row 2: Spline Area Chart + Donut */}

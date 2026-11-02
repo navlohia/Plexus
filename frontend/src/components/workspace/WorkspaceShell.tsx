@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import {
   Radar,
   LayoutGrid,
@@ -12,6 +12,7 @@ import { CRISIS_SCENARIOS } from "../../lib/crisisData";
 import { NCR_HOSPITAL_METAS, findOptimalDonorHub } from "../../lib/hospitalTelemetry";
 import { createTransferRequest, fetchState, injectChaos, setTransferStatus, tick } from "../../api";
 import type { WorkspaceTab } from "../../App";
+import { useStoryStore } from "../../store/storyStore";
 import MedisoDashboardTab from "./MedisoDashboardTab";
 import FlightyTVMapTab from "./FlightyTVMapTab";
 import SurgeTab from "./SurgeTab";
@@ -21,6 +22,7 @@ export type ThemeMode = "light" | "dark";
 interface WorkspaceShellProps {
   initialTab: WorkspaceTab;
   initialScenario: ScenarioKey | null;
+  initialHospitalCode?: string | null;
   onExit: () => void;
 }
 
@@ -273,7 +275,7 @@ const FALLBACK_STATE: TickState = {
   },
 };
 
-export default function WorkspaceShell({ initialTab, initialScenario, onExit }: WorkspaceShellProps) {
+export default function WorkspaceShell({ initialTab, initialScenario, initialHospitalCode, onExit }: WorkspaceShellProps) {
   // Normalize tab: inventory or dispatch map cleanly to dashboard
   const resolvedInitial: "map" | "dashboard" | "surge" =
     initialTab === "dashboard" || initialTab === "inventory" || initialTab === "dispatch"
@@ -285,25 +287,49 @@ export default function WorkspaceShell({ initialTab, initialScenario, onExit }: 
   const [tab, setTab] = useState<"map" | "dashboard" | "surge">(resolvedInitial);
   const [activeCrisisId, setActiveCrisisId] = useState<string | null>(initialScenario || null);
   const [state, setState] = useState<TickState>(FALLBACK_STATE);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [isRebalancing, setIsRebalancing] = useState(false);
-  const [selectedHospitalId, setSelectedHospitalId] = useState<string | null>(null);
+
+  // Match initialHospitalCode to hospital id (e.g. 'SFD' -> 'ND-02')
+  const initialHospId = useMemo(() => {
+    if (!initialHospitalCode) return null;
+    const match = Object.entries(NCR_HOSPITAL_METAS).find(
+      ([_, m]) => m.code.toUpperCase() === initialHospitalCode.toUpperCase()
+    );
+    return match ? match[0] : null;
+  }, [initialHospitalCode]);
+
+  const [selectedHospitalId, setSelectedHospitalId] = useState<string | null>(initialHospId);
+  const setStoreSelectedHospitalId = useStoryStore((s) => s.setSelectedHospitalId);
+
+  useEffect(() => {
+    setStoreSelectedHospitalId(selectedHospitalId);
+  }, [selectedHospitalId, setStoreSelectedHospitalId]);
+
+  useEffect(() => {
+    if (initialHospId !== null) {
+      setSelectedHospitalId(initialHospId);
+    }
+  }, [initialHospId]);
+
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [toastVisible, setToastVisible] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
-    fetchState()
-      .then((s) => {
-        if (s && s.nodes && s.nodes.length > 0) {
-          setState((prev) => ({
-            ...s,
-            transfers: s.transfers && s.transfers.length > 0 ? s.transfers : prev.transfers,
-          }));
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    const timer = setTimeout(() => {
+      fetchState()
+        .then((s) => {
+          if (s && s.nodes && s.nodes.length > 0) {
+            setState((prev) => ({
+              ...s,
+              transfers: s.transfers && s.transfers.length > 0 ? s.transfers : prev.transfers,
+            }));
+          }
+        })
+        .catch(() => {});
+    }, 1500);
+
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -717,7 +743,7 @@ export default function WorkspaceShell({ initialTab, initialScenario, onExit }: 
   }, []);
 
   return (
-    <div className="ws-fullbleed-root">
+    <div className={`ws-fullbleed-root${tab === "map" ? " ws-map-mode" : ""}`}>
       {/* ── STEP 1: ULTRA-CLEAN TOP BAR (60px) WITH ONLY 3 TABS ── */}
       <header className="ws-topbar-clean">
         {/* Left: ← Story + #15997A emerald icon + Plexus */}
