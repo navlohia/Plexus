@@ -45,18 +45,33 @@ export function getHospitalHaloData(): HospitalPressureHalo[] {
 }
 
 /**
- * Builds soft deck.gl pressure halo layers beneath hospital markers (Spec §3).
+ * Builds soft deck.gl pressure halo layers beneath hospital markers (Spec §3 & §20).
  * Red weighted by shortage severity; amber for surplus.
  * Soft radial falloff via concentric rings with max alpha ~0.22 at ~2.5 km radius.
+ * Spec §20: Unrelated halos dim to 30% when a hospital is selected.
  */
-export function createPressureHaloLayers(opacity = 1.0): any[] {
+export function createPressureHaloLayers(
+  opacity = 1.0,
+  selectedHospitalId?: string | null,
+  partnerIds: string[] = []
+): any[] {
   if (opacity <= 0.001) return [];
 
   const data = getHospitalHaloData();
   const clampedOpacity = Math.max(0, Math.min(1, opacity));
+  const relatedSet = selectedHospitalId ? new Set([selectedHospitalId, ...partnerIds]) : null;
+
+  const getHaloAlpha = (d: HospitalPressureHalo, baseFraction: number) => {
+    let alpha = baseFraction * d.severity * clampedOpacity;
+    if (relatedSet) {
+      if (!relatedSet.has(d.id)) {
+        alpha *= 0.30; // Unrelated halos dim to 30% (Spec §20)
+      }
+    }
+    return Math.round(255 * alpha);
+  };
 
   // 3 Concentric rings create a soft, feather-edged radial field without sharp cutoffs
-  // Max combined alpha at center: ~0.22 * severity * opacity
   const outerLayer = new ScatterplotLayer({
     id: 'deck-pressure-halos-outer',
     data,
@@ -67,7 +82,7 @@ export function createPressureHaloLayers(opacity = 1.0): any[] {
       d.color[0],
       d.color[1],
       d.color[2],
-      Math.round(255 * (0.06 * d.severity * clampedOpacity)),
+      getHaloAlpha(d, 0.06),
     ],
     stroked: false,
     pickable: false,
@@ -84,7 +99,7 @@ export function createPressureHaloLayers(opacity = 1.0): any[] {
       d.color[0],
       d.color[1],
       d.color[2],
-      Math.round(255 * (0.09 * d.severity * clampedOpacity)),
+      getHaloAlpha(d, 0.09),
     ],
     stroked: false,
     pickable: false,
@@ -101,7 +116,7 @@ export function createPressureHaloLayers(opacity = 1.0): any[] {
       d.color[0],
       d.color[1],
       d.color[2],
-      Math.round(255 * (0.12 * d.severity * clampedOpacity)),
+      getHaloAlpha(d, 0.12),
     ],
     stroked: false,
     pickable: false,

@@ -6,6 +6,9 @@ import {
   ArrowLeft,
   Zap,
   Droplets,
+  Volume2,
+  VolumeX,
+  LogIn,
 } from "lucide-react";
 import type { ScenarioKey, TickState, TransferOrder, TransferRequestInput, TransferStatus, BloodType, HospitalNode } from "../../types";
 import { CRISIS_SCENARIOS } from "../../lib/crisisData";
@@ -13,7 +16,10 @@ import { NCR_HOSPITAL_METAS, findOptimalDonorHub } from "../../lib/hospitalTelem
 import { createTransferRequest, fetchState, injectChaos, setTransferStatus, tick } from "../../api";
 import type { WorkspaceTab } from "../../App";
 import { useStoryStore } from "../../store/storyStore";
-import MedisoDashboardTab from "./MedisoDashboardTab";
+import { soundEngine } from "../../utils/soundEngine";
+import { useDispatchStore } from "../../data/dispatch";
+import { PlexusStoreProvider, usePlexusStore } from "../../context/PlexusStore";
+import MoveonDashboard from "./MoveonDashboard";
 import FlightyTVMapTab from "./FlightyTVMapTab";
 import SurgeTab from "./SurgeTab";
 
@@ -275,7 +281,8 @@ const FALLBACK_STATE: TickState = {
   },
 };
 
-export default function WorkspaceShell({ initialTab, initialScenario, initialHospitalCode, onExit }: WorkspaceShellProps) {
+function WorkspaceShellInner({ initialTab, initialScenario, initialHospitalCode, onExit }: WorkspaceShellProps) {
+  const plexus = usePlexusStore();
   // Normalize tab: inventory or dispatch map cleanly to dashboard
   const resolvedInitial: "map" | "dashboard" | "surge" =
     initialTab === "dashboard" || initialTab === "inventory" || initialTab === "dispatch"
@@ -287,8 +294,13 @@ export default function WorkspaceShell({ initialTab, initialScenario, initialHos
   const [tab, setTab] = useState<"map" | "dashboard" | "surge">(resolvedInitial);
   const [activeCrisisId, setActiveCrisisId] = useState<string | null>(initialScenario || null);
   const [state, setState] = useState<TickState>(FALLBACK_STATE);
-  const [loading] = useState(false);
+  const [_loading] = useState(false);
   const [isRebalancing, setIsRebalancing] = useState(false);
+  const [isMuted, setIsMuted] = useState(() => soundEngine.isMuted());
+
+  useEffect(() => {
+    return soundEngine.subscribe((muted) => setIsMuted(muted));
+  }, []);
 
   // Match initialHospitalCode to hospital id (e.g. 'SFD' -> 'ND-02')
   const initialHospId = useMemo(() => {
@@ -329,7 +341,7 @@ export default function WorkspaceShell({ initialTab, initialScenario, initialHos
         .catch(() => {});
     }, 1500);
 
-    return () => clearTimeout(timer);
+  return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -343,7 +355,8 @@ export default function WorkspaceShell({ initialTab, initialScenario, initialHos
     setToastVisible(true);
     const hideTimer = setTimeout(() => setToastVisible(false), 2600);
     const clearTimer = setTimeout(() => setToast(null), 3000);
-    return () => {
+
+  return () => {
       clearTimeout(hideTimer);
       clearTimeout(clearTimer);
     };
@@ -354,6 +367,9 @@ export default function WorkspaceShell({ initialTab, initialScenario, initialHos
   const handleStep = useCallback(() => {
     if (isRebalancing) return;
     setIsRebalancing(true);
+
+    // Regenerate proposals in global plexus store and dispatch store (Spec 21.3 / 21.4)
+    const rebalanceResult = plexus.rebalance();
 
     // Instant local state update — never wait for backend
     setState((prev) => {
@@ -370,9 +386,14 @@ export default function WorkspaceShell({ initialTab, initialScenario, initialHos
       if (s && s.nodes && s.nodes.length > 0) setState(s);
     }).catch(() => {});
 
-    showToast("+6h simulated: network rebalanced");
-  }, [isRebalancing]);
+    showToast(
+      rebalanceResult.count > 0
+        ? `Solver proposed ${rebalanceResult.count} transfers (${rebalanceResult.units}u)`
+        : "+6h simulated: network rebalanced"
+    );
+  }, [isRebalancing, plexus]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleTransferRequest = useCallback(async (p: TransferRequestInput) => {
     let donorId = p.source_id;
     if (!donorId || donorId === p.target_id) {
@@ -518,6 +539,9 @@ export default function WorkspaceShell({ initialTab, initialScenario, initialHos
   }, [state?.nodes]);
 
   const handleDirectMapDispatch = useCallback((targetHospitalId: string, requestedUnits = 16) => {
+    // Approve matching proposal in dispatch store (Spec 21.3 / 21.4)
+    useDispatchStore.getState().approve(targetHospitalId);
+
     const currentNodes = Array.isArray(state?.nodes) && state.nodes.length > 0 ? state.nodes : createDefaultHospitalNodes();
     const recipient = currentNodes.find((n) => n.id === targetHospitalId);
     if (!recipient) return;
@@ -612,6 +636,7 @@ export default function WorkspaceShell({ initialTab, initialScenario, initialHos
   }, [state?.nodes]);
 
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleStatusChange = useCallback(async (txId: string, status: TransferStatus) => {
     setState((prev) => {
       const cleanTxId = txId.startsWith("#") ? txId : `#${txId}`;
@@ -652,6 +677,7 @@ export default function WorkspaceShell({ initialTab, initialScenario, initialHos
 
   const handleActivateScenario = useCallback((scenarioId: string) => {
     setActiveCrisisId(scenarioId);
+    plexus.triggerOutbreak(scenarioId);
     const scenario = CRISIS_SCENARIOS[scenarioId];
     if (!scenario) return;
 
@@ -727,6 +753,7 @@ export default function WorkspaceShell({ initialTab, initialScenario, initialHos
 
   const handleStopScenario = useCallback(() => {
     setActiveCrisisId(null);
+    plexus.resetScenario();
     fetch(`${import.meta.env.VITE_API_BASE ?? ""}/api/reset`, { method: "POST" })
       .then((r) => r.json())
       .then((next) => {
@@ -741,6 +768,10 @@ export default function WorkspaceShell({ initialTab, initialScenario, initialHos
       });
     showToast("✓ Crisis simulation stopped · Baseline network restored");
   }, []);
+
+  // Keep these callbacks available for future re-integration with MedisoDashboardTab
+  void handleTransferRequest;
+  void handleStatusChange;
 
   return (
     <div className={`ws-fullbleed-root${tab === "map" ? " ws-map-mode" : ""}`}>
@@ -784,12 +815,12 @@ export default function WorkspaceShell({ initialTab, initialScenario, initialHos
             type="button"
             onClick={() => {
               setTab("dashboard");
-              window.location.hash = "/workspace/dashboard";
+              window.location.hash = "/workspace/dispatch";
             }}
             className={`ws-tab-pill${tab === "dashboard" ? " active" : ""}`}
           >
             <LayoutGrid size={15} strokeWidth={tab === "dashboard" ? 2.2 : 1.8} />
-            <span>Clinical Dashboard</span>
+            <span>Dispatch</span>
           </button>
 
           <button
@@ -805,8 +836,59 @@ export default function WorkspaceShell({ initialTab, initialScenario, initialHos
           </button>
         </div>
 
-        {/* Right: Only the #15997A +6h Solver Rebalance button */}
-        <div className="ws-topbar-right">
+        {/* Right: Sound toggle + Sign In + +6h Solver Rebalance button */}
+        <div className="ws-topbar-right" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            type="button"
+            onClick={() => { window.location.hash = '#/signin'; }}
+            className="ws-auth-btn"
+            title="Node Authentication"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: '999px',
+              border: '1px solid #E5E7EB',
+              background: '#FFFFFF',
+              color: '#374151',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+              fontFamily: 'var(--font-mono, monospace)',
+            }}
+          >
+            <LogIn size={13} strokeWidth={2.2} />
+            <span>SIGN IN</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => soundEngine.toggleMute()}
+            className="ws-sound-toggle-btn"
+            title={isMuted ? "Enable tactile audio effects" : "Mute audio effects"}
+            aria-label={isMuted ? "Enable tactile audio effects" : "Mute audio effects"}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 32,
+              height: 32,
+              borderRadius: '999px',
+              border: '1px solid #E5E7EB',
+              background: '#FFFFFF',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            {isMuted ? (
+              <VolumeX size={14} strokeWidth={2.2} color="#6B7280" />
+            ) : (
+              <Volume2 size={14} strokeWidth={2.2} color="#15997A" />
+            )}
+          </button>
+
           <button
             type="button"
             onClick={handleStep}
@@ -833,25 +915,13 @@ export default function WorkspaceShell({ initialTab, initialScenario, initialHos
             onOpenDispatch={(id) => {
               setSelectedHospitalId(id);
               setTab("dashboard");
-              window.location.hash = "/workspace/dashboard";
+              window.location.hash = "/workspace/dispatch";
             }}
           />
         )}
 
         {tab === "dashboard" && (
-          <MedisoDashboardTab
-            state={state}
-            selectedHospitalId={selectedHospitalId}
-            onViewOnMap={(id) => {
-              setSelectedHospitalId(id);
-              setTab("map");
-              window.location.hash = "/workspace/map";
-            }}
-            onInitiateTransfer={handleTransferRequest}
-            onStatusChange={handleStatusChange}
-            onStepSim={handleStep}
-            loadingStep={loading}
-          />
+          <MoveonDashboard />
         )}
 
         {tab === "surge" && (
@@ -877,5 +947,13 @@ export default function WorkspaceShell({ initialTab, initialScenario, initialHos
         </div>
       )}
     </div>
+  );
+}
+
+export default function WorkspaceShell(props: WorkspaceShellProps) {
+  return (
+    <PlexusStoreProvider>
+      <WorkspaceShellInner {...props} />
+    </PlexusStoreProvider>
   );
 }

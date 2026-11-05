@@ -37,16 +37,11 @@ export function updateStoryMarkersAndArcs(
     const asgn = assignments[i];
     const h = asgn.hospital;
     const markerEl = document.getElementById(`story-dom-marker-${h.id}`);
-    const rippleEl = document.getElementById(`story-dom-ripple-${h.id}`);
     if (!markerEl) continue;
 
     if (p < asgn.windowEnd) {
       markerEl.style.opacity = '0';
       markerEl.style.display = 'none';
-      if (rippleEl) {
-        rippleEl.style.display = 'none';
-        rippleEl.style.opacity = '0';
-      }
       continue;
     }
 
@@ -57,23 +52,6 @@ export function updateStoryMarkersAndArcs(
     // Landing swap: DOM marker fades in beneath node over 120ms (deltaP = 0.015) while node fades out
     const tSwap = Math.min(1.0, (p - asgn.windowEnd) / 0.015);
     markerEl.style.opacity = `${tSwap.toFixed(3)}`;
-
-    // Ripple: one 450 ms expanding ring (1px ring, state color 40% to 0, once only) per landing (Spec §8)
-    // 450 ms interval in scroll progress ~ 0.040
-    if (rippleEl) {
-      if (p >= asgn.windowEnd && p < asgn.windowEnd + 0.040) {
-        const uRipple = (p - asgn.windowEnd) / 0.040;
-        const ringSize = 16 + 42 * Math.sqrt(uRipple); // expands from 16px to 58px
-        const ringAlpha = 0.40 * (1.0 - uRipple);
-        rippleEl.style.display = 'block';
-        rippleEl.style.width = `${ringSize.toFixed(1)}px`;
-        rippleEl.style.height = `${ringSize.toFixed(1)}px`;
-        rippleEl.style.opacity = `${ringAlpha.toFixed(3)}`;
-      } else {
-        rippleEl.style.display = 'none';
-        rippleEl.style.opacity = '0';
-      }
-    }
 
     // Pills: section 3 placement; in the Story only arc endpoints show pills, 120 ms after landing
     if (h.isArcEndpoint) {
@@ -255,6 +233,7 @@ export const MapStage: React.FC = () => {
         maxPitch={80}
         style={{ width: '100%', height: '100%' }}
         attributionControl={false}
+        pixelRatio={typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1}
         onLoad={(evt) => {
           if (!createdRef.current) {
             createdRef.current = true;
@@ -313,6 +292,12 @@ export const MapStage: React.FC = () => {
             (window as any).__map = map;
             (window as any).__deckOverlay = overlay;
             (window as any).__setHaloOpacity = setStoryHaloOpacity;
+            (window as any).__updateHalos = (selectedId?: string | null, partnerIds: string[] = []) => {
+              const ov = overlayRef.current || (window as any).__deckOverlay;
+              if (!ov) return;
+              const layers = createPressureHaloLayers(1.0, selectedId, partnerIds);
+              ov.setProps({ layers });
+            };
             (window as any).__countRenderedLabels = () => countRenderedLabels(map);
             (window as any).__updateStoryOverlays = (p: number) =>
               updateStoryMarkersAndArcs(p, map, assignments);
@@ -374,23 +359,6 @@ export const MapStage: React.FC = () => {
                   willChange: 'transform, opacity',
                 }}
               >
-                {/* 450 ms expanding ripple ring on landing (Spec §8: 1px ring, state color 40% to 0) */}
-                <div
-                  id={`story-dom-ripple-${h.id}`}
-                  style={{
-                    position: 'absolute',
-                    borderRadius: '50%',
-                    border: `1px solid ${h.statusColor}`,
-                    pointerEvents: 'none',
-                    opacity: 0,
-                    display: 'none',
-                    boxSizing: 'border-box',
-                    transform: 'translate(-50%, -50%)',
-                    left: '50%',
-                    top: '50%',
-                  }}
-                />
-
                 <div
                   className="flighty-pin-dot"
                   style={{

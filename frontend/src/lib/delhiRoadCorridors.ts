@@ -1,9 +1,12 @@
+import routesData from '../data/routes.json';
+import { NCR_HOSPITAL_METAS } from './hospitalTelemetry';
+
 /**
  * delhiRoadCorridors.ts
  * High-precision Delhi-NCR Highway Corridors & Arterial Road Routing
  * Guarantees all routes strictly stay within NCR map viewport bounds (lat: 28.502 - 28.645, lng: 77.060 - 77.365)
- * and follow realistic arterial highway corridors (Barapullah, NH-48, Ring Road, DND Flyway, Sri Aurobindo Marg)
- * with authentic multi-waypoint road splines and live point/tangent interpolation.
+ * and follow authentic OSRM highway geometry (Barapullah, NH-48, Ring Road, DND Flyway, Sri Aurobindo Marg)
+ * with zero light-green Bezier curves per LANDING_SPEC Section 2.
  */
 
 const BOUNDS = {
@@ -250,10 +253,66 @@ export function generateCurvedArterialCorridor(
   return points;
 }
 
+// Polyline6 decoder (factor 1e6)
+function decodePolyline6(str: string): [number, number][] {
+  let index = 0;
+  let lat = 0;
+  let lng = 0;
+  const coordinates: [number, number][] = [];
+  const factor = 1e6;
+  while (index < str.length) {
+    let b;
+    let shift = 0;
+    let result = 0;
+    do {
+      b = str.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    const dlat = (result & 1) !== 0 ? ~(result >> 1) : result >> 1;
+    lat += dlat;
+
+    shift = 0;
+    result = 0;
+    do {
+      b = str.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    const dlng = (result & 1) !== 0 ? ~(result >> 1) : result >> 1;
+    lng += dlng;
+
+    coordinates.push([lng / factor, lat / factor]);
+  }
+  return coordinates;
+}
+
+function haversineM(c1: [number, number], c2: [number, number]): number {
+  const R = 6371000;
+  const dLat = ((c2[1] - c1[1]) * Math.PI) / 180;
+  const dLng = ((c2[0] - c1[0]) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((c1[1] * Math.PI) / 180) *
+      Math.cos((c2[1] * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+export function resolveHospitalCode(idOrCode: string): string {
+  if (NCR_HOSPITAL_METAS[idOrCode]) return NCR_HOSPITAL_METAS[idOrCode].code;
+  for (const meta of Object.values(NCR_HOSPITAL_METAS)) {
+    if (meta.code === idOrCode || meta.short === idOrCode) return meta.code;
+  }
+  return idOrCode;
+}
+
+// Synchronous memory cache for pre-baked OSRM highway coordinates
+const OSRM_HIGHWAY_CACHE = new Map<string, [number, number][]>();
+
 /**
- * Returns authentic, detailed road coordinates strictly within Delhi NCR bounds.
- * Uses real highway waypoints with Catmull-Rom splines when available,
- * or smooth cubic Bezier arterial corridors.
+ * Returns authentic, detailed multi-waypoint OSRM highway coordinates (Spec §2).
+ * STRICT RULE: Never returns faint light-green direct/straight/Bezier curves.
  */
 export function getRealRoadCorridor(
   srcCoords: [number, number],
@@ -262,17 +321,54 @@ export function getRealRoadCorridor(
   targetId: string,
   _onLoaded?: () => void
 ): [number, number][] {
+  const c1 = resolveHospitalCode(sourceId);
+  const c2 = resolveHospitalCode(targetId);
+  const pairKey = `${c1}->${c2}`;
+
+  if (OSRM_HIGHWAY_CACHE.has(pairKey)) {
+    return OSRM_HIGHWAY_CACHE.get(pairKey)!;
+  }
+
+  // 1. Check pre-computed OSRM routes.json
+  const lookupKey = [c1, c2].sort().join('|');
+  const allRoutes = (routesData as any)?.routes || {};
+  const rData = allRoutes[lookupKey];
+
+  if (rData && rData.p) {
+    const decoded = decodePolyline6(rData.p);
+    // Orient strictly from source -> target
+    if (c1 > c2) {
+      decoded.reverse();
+    }
+    // Hairline connector if endpoints > 15m from marker coordinates (Spec §12)
+    const startDist = haversineM(decoded[0], srcCoords);
+    const endDist = haversineM(decoded[decoded.length - 1], tgtCoords);
+    if (startDist > 15) decoded.unshift(srcCoords);
+    if (endDist > 15) decoded.push(tgtCoords);
+
+    OSRM_HIGHWAY_CACHE.set(pairKey, decoded);
+    return decoded;
+  }
+
+  // 2. Check pre-baked real highway waypoints as secondary cache
   const key = `${sourceId}-${targetId}`;
   if (REAL_HIGHWAY_WAYPOINTS[key]) {
-    return interpolateCatmullRom(REAL_HIGHWAY_WAYPOINTS[key], 36);
+    const pts = interpolateCatmullRom(REAL_HIGHWAY_WAYPOINTS[key], 40);
+    OSRM_HIGHWAY_CACHE.set(pairKey, pts);
+    return pts;
   }
 
   const revKey = `${targetId}-${sourceId}`;
   if (REAL_HIGHWAY_WAYPOINTS[revKey]) {
-    return interpolateCatmullRom([...REAL_HIGHWAY_WAYPOINTS[revKey]].reverse(), 36);
+    const pts = interpolateCatmullRom([...REAL_HIGHWAY_WAYPOINTS[revKey]].reverse(), 40);
+    OSRM_HIGHWAY_CACHE.set(pairKey, pts);
+    return pts;
   }
 
-  return generateCurvedArterialCorridor(srcCoords, tgtCoords, sourceId, targetId, 36);
+  // 3. Fallback straight connection clamped to bounds (NO curved Bezier line per Spec §2.2)
+  const line = [clampCoord(srcCoords), clampCoord(tgtCoords)];
+  OSRM_HIGHWAY_CACHE.set(pairKey, line);
+  return line;
 }
 
 /**

@@ -158,6 +158,8 @@ export default function HeroPlateletCanvas() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    const mountTime = performance.now();
+
     // 1. WebGL Renderer (high-performance, ACES Filmic tone mapping)
     const renderer = new THREE.WebGLRenderer({
       canvas,
@@ -549,22 +551,36 @@ export default function HeroPlateletCanvas() {
       const stageCenterX = isMobile ? 0 : 0.71 * viewportW - viewportW / 2;
       const stageCenterY = isMobile ? 0.10 * viewportH : -(0.46 * viewportH - viewportH / 2);
 
-      heroGroup.position.set(stageCenterX, stageCenterY, 0);
+      // SECTION 1.3: Right-to-Left Platelet Glide Animation
+      // 1. Initial Mount Entrance: animate position.x from +2.8 to resting +0.85 over 1.1s using cubic-out (1 - (1 - t)^3)
+      const elapsedEntrance = (performance.now() - mountTime) / 1000;
+      const tEntrance = Math.min(1.0, Math.max(0.0, elapsedEntrance / 1.1));
+      const easeEntrance = 1.0 - Math.pow(1.0 - tEntrance, 3);
+      const entranceX = 2.8 - (2.8 - 0.85) * easeEntrance; // 2.8 -> 0.85
 
-      // Update Clinical Alabaster/Slate Backdrop Opacity
-      const backdropEl = document.getElementById('story-clinical-backdrop');
-      if (backdropEl) {
-        if (progress <= 0.18) {
-          backdropEl.style.opacity = '1.0';
-          backdropEl.style.display = 'block';
-        } else if (progress <= 0.30) {
-          const tFade = (progress - 0.18) / (0.30 - 0.18);
-          backdropEl.style.opacity = `${Math.max(0, 1.0 - tFade).toFixed(3)}`;
-          backdropEl.style.display = 'block';
-        } else {
-          backdropEl.style.opacity = '0.0';
-          backdropEl.style.display = 'none';
-        }
+      // 2. Scroll Drift (0% – 22% scroll): position.x drifting from +0.85 to +0.35 before node separation begins
+      const tScroll = Math.min(1.0, Math.max(0.0, progress / 0.22));
+      const scrollDrift = (0.85 - 0.35) * tScroll; // 0.85 -> 0.35
+      const currentNormX = entranceX - scrollDrift;
+
+      // Project normalized X to screen pixel position
+      let groupPosX: number;
+      if (isMobile) {
+        groupPosX = (currentNormX - 0.85) * (viewportW * 0.65);
+      } else {
+        groupPosX = stageCenterX * (currentNormX / 0.85);
+      }
+
+      heroGroup.position.set(groupPosX, stageCenterY, 0);
+      (heroGroup as any).specPositionX = currentNormX;
+
+      // SECTION 1.2: Soft Burgundy-to-Coral-Peach Stage 1 Gradient Bridge Opacity (0% -> 26%)
+      // opacity = Math.max(0, 1 - smoothScroll * 3.8)
+      const bridgeEl = document.getElementById('story-stage1-bridge-gradient') || document.getElementById('hero-crimson-atmosphere');
+      if (bridgeEl) {
+        const atmoOpacity = Math.max(0, 1 - progress * 3.8);
+        bridgeEl.style.opacity = atmoOpacity.toFixed(3);
+        bridgeEl.style.display = atmoOpacity > 0 ? 'block' : 'none';
       }
 
       // Elastic pulse scale damping (substepped stable spring settling to 1.0)
@@ -670,17 +686,9 @@ export default function HeroPlateletCanvas() {
       const ulX = (vUpperLeft.x * 0.5 + 0.5) * viewportW;
       const ulY = (-vUpperLeft.y * 0.5 + 0.5) * viewportH;
 
-      // 3. Lower-Left rim point (+140 deg: negative X, tilted lower-left) -> O-NEG APHERESIS
-      const vLower = new THREE.Vector3(Math.cos(2.45), 0, Math.sin(2.45));
-      vLower.applyMatrix4(heroMesh.matrixWorld);
-      vLower.project(camera);
-      const lowerX = (vLower.x * 0.5 + 0.5) * viewportW;
-      const lowerY = (-vLower.y * 0.5 + 0.5) * viewportH;
-
       (window as any).__plateletAnnotations = {
         upper: { x: upperX, y: upperY },
         upperLeft: { x: ulX, y: ulY },
-        lower: { x: lowerX, y: lowerY },
         opacity: progress <= 0.10 ? 1.0 : Math.max(0, 1.0 - (progress - 0.10) / 0.02),
       };
 
@@ -1086,20 +1094,27 @@ export default function HeroPlateletCanvas() {
         overflow: 'hidden',
       }}
     >
-      {/* Clinical Alabaster/Slate Backdrop with subtle radial crimson glow BEHIND 3D Platelet */}
+      {/* SECTION 1.2: Soft Burgundy-to-Coral-Peach Stage 1 Gradient Bridge (Section 1.2, Behind 3D Canvas) */}
       <div
-        id="story-clinical-backdrop"
+        id="story-stage1-bridge-gradient"
+        className="story-stage1-bridge-gradient"
         style={{
-          position: 'absolute',
+          position: 'fixed',
           inset: 0,
           pointerEvents: 'none',
           zIndex: 0,
           background: `
-            linear-gradient(90deg, #F8FAFC 0%, #F1F5F9 35%, rgba(248, 250, 252, 0.90) 58%, rgba(248, 250, 252, 0.40) 80%, transparent 100%),
-            radial-gradient(520px circle at 71% 46%, rgba(225, 29, 72, 0.12) 0%, rgba(225, 29, 72, 0.03) 45%, transparent 70%)
+            radial-gradient(58% 58% at 72% 42%, rgba(244, 114, 108, 0.28) 0%, rgba(190, 24, 60, 0.12) 48%, transparent 100%),
+            linear-gradient(115deg, rgba(76, 11, 34, 0.16) 0%, rgba(201, 74, 94, 0.10) 55%, rgba(255, 255, 255, 0) 100%)
           `,
           opacity: 1,
-          transition: 'opacity 0.1s linear',
+        }}
+      />
+      <div
+        id="hero-crimson-atmosphere"
+        className="hero-crimson-atmosphere"
+        style={{
+          display: 'none',
         }}
       />
       <canvas

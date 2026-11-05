@@ -13,16 +13,18 @@ import {
 } from './story/morphController';
 import { playWorkspaceReveal, reverseWorkspaceReveal } from './story/workspaceReveal';
 import { runAllStoryChecks } from './story/storyChecks';
+import { useDispatchStore } from './data/dispatch';
 import type { ScenarioKey } from './types';
 
 // Code-split story components: never loaded on direct #/workspace/map visits
 const LandingPage = lazy(() => import('./components/landing/LandingPage'));
 const HeroPlateletCanvas = lazy(() => import('./components/landing/HeroPlateletCanvas'));
+const SignInPage = lazy(() => import('./components/SignInPage'));
 
 export type WorkspaceTab = 'map' | 'dashboard' | 'surge' | 'inventory' | 'dispatch';
 
 interface Route {
-  view: 'landing' | 'workspace';
+  view: 'landing' | 'workspace' | 'signin';
   tab: WorkspaceTab;
   scenario: ScenarioKey | null;
   hospitalCode: string | null;
@@ -37,6 +39,9 @@ const SCENARIO_KEYS: Record<string, ScenarioKey> = {
 function parseHash(): Route {
   const raw = window.location.hash.replace(/^#\/?/, '');
   const [section, tab, param] = raw.split('/');
+  if (section === 'signin' || section === 'login') {
+    return { view: 'signin', tab: 'map', scenario: null, hospitalCode: null };
+  }
   if (section !== 'workspace') {
     return { view: 'landing', tab: 'map', scenario: null, hospitalCode: null };
   }
@@ -159,6 +164,8 @@ export default function App() {
       storyObj.reverseWorkspaceReveal = reverseWorkspaceReveal;
       storyObj.checks = () => runAllStoryChecks();
       (window as any).__story = storyObj;
+      (window as any).checks = () => runAllStoryChecks();
+      (window as any).useDispatchStore = useDispatchStore;
     }
   }, [enterWorkspace, exitToStory]);
 
@@ -215,52 +222,59 @@ export default function App() {
       {/* 1. Persistent MapStage mounted ABOVE the router */}
       <MapStage />
 
-      {/* 2. Story 3D Canvas (code-split, unmounted in workspace) */}
+      {/* 2. Story 3D Canvas (code-split, unmounted in workspace & signin) */}
       <Suspense fallback={null}>
         {(route.view === 'landing' || transitionState === 'entering') && (
           <HeroPlateletCanvas />
         )}
       </Suspense>
 
-      {/* 3. Router-driven active view wrapped for transition controller */}
-      <div
-        className={`app-route-view ws-transition-${transitionState}`}
-        style={{
-          position: 'relative',
-          zIndex: 10,
-          width: '100%',
-          height: '100%',
-          pointerEvents:
-            route.view === 'workspace' && route.tab === 'map' && transitionState === 'idle'
-              ? 'none'
-              : 'auto',
-        }}
-      >
+      {/* 3. Dedicated Sign-In Page (Plexus Node Authentication Console) */}
+      {route.view === 'signin' ? (
         <Suspense fallback={null}>
-          {(route.view === 'workspace' || transitionState === 'entering' || transitionState === 'exiting') && (
-            <WorkspaceShell
-              initialTab={route.tab}
-              initialScenario={route.scenario}
-              initialHospitalCode={route.hospitalCode}
-              onExit={() => {
-                navigate('/');
-                exitToStory();
-              }}
-            />
-          )}
-          {(route.view === 'landing' || transitionState === 'entering' || transitionState === 'exiting') && (
-            <LandingPage
-              onOpenWorkspace={() => {
-                navigate('/workspace/map');
-                enterWorkspace();
-              }}
-              onRunDemo={() => {
-                navigate('/workspace/surge/dengue');
-              }}
-            />
-          )}
+          <SignInPage />
         </Suspense>
-      </div>
+      ) : (
+        /* 4. Router-driven active view wrapped for transition controller */
+        <div
+          className={`app-route-view ws-transition-${transitionState}`}
+          style={{
+            position: 'relative',
+            zIndex: 10,
+            width: '100%',
+            height: '100%',
+            pointerEvents:
+              route.view === 'workspace' && route.tab === 'map' && transitionState === 'idle'
+                ? 'none'
+                : 'auto',
+          }}
+        >
+          <Suspense fallback={null}>
+            {(route.view === 'workspace' || transitionState === 'entering' || transitionState === 'exiting') && (
+              <WorkspaceShell
+                initialTab={route.tab}
+                initialScenario={route.scenario}
+                initialHospitalCode={route.hospitalCode}
+                onExit={() => {
+                  navigate('/');
+                  exitToStory();
+                }}
+              />
+            )}
+            {(route.view === 'landing' || transitionState === 'entering' || transitionState === 'exiting') && (
+              <LandingPage
+                onOpenWorkspace={() => {
+                  navigate('/workspace/map');
+                  enterWorkspace();
+                }}
+                onRunDemo={() => {
+                  navigate('/workspace/surge/dengue');
+                }}
+              />
+            )}
+          </Suspense>
+        </div>
+      )}
 
       {/* 4. Dev Tooling & Progress readout: render ONLY with ?dev=1 */}
       {typeof window !== 'undefined' && window.location.search.includes('dev=1') && (

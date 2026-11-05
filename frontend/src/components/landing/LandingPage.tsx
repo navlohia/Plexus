@@ -5,6 +5,7 @@ import StoryTextLayer from './StoryTextLayer';
 import { applyStoryCamera } from '../../story/stageCamera';
 import { syncStoryPlaceNameLabels } from '../../story/clinicalAtlasStyle';
 import { runAllStoryChecks } from '../../story/storyChecks';
+import { soundEngine } from '../../utils/soundEngine';
 
 interface LandingPageProps {
   onOpenWorkspace: () => void;
@@ -105,6 +106,18 @@ export default function LandingPage({ onOpenWorkspace }: LandingPageProps) {
         domController.update(p);
       }
 
+      // Step 4: Web Audio Synthesizer (Spec §1.4)
+      soundEngine.onScrollProgress(p);
+
+      // SECTION 1.2: Soft Burgundy-to-Coral-Peach Stage 1 Gradient Bridge Opacity (0% -> 26%)
+      // opacity = Math.max(0, 1 - smoothScroll * 3.8)
+      const bridgeEl = document.getElementById('story-stage1-bridge-gradient') || document.getElementById('hero-crimson-atmosphere');
+      if (bridgeEl) {
+        const atmoOpacity = Math.max(0, 1 - p * 3.8);
+        bridgeEl.style.opacity = atmoOpacity.toFixed(3);
+        bridgeEl.style.display = atmoOpacity > 0 ? 'block' : 'none';
+      }
+
       // Story Paper Veil (Spec §3: opacity 0.55 -> 0 over 0 -> 0.30)
       const veil = document.getElementById('story-paper-veil');
       if (veil) {
@@ -144,6 +157,17 @@ export default function LandingPage({ onOpenWorkspace }: LandingPageProps) {
       if (hero) hero.update(p, 0.016, performance.now() / 1000);
       const dom = (window as any).__storyDOM;
       if (dom) dom.update(p);
+
+      soundEngine.onScrollProgress(p);
+
+      // SECTION 1.2: Soft Burgundy-to-Coral-Peach Stage 1 Gradient Bridge Opacity (0% -> 26%)
+      // opacity = Math.max(0, 1 - smoothScroll * 3.8)
+      const bridgeEl = document.getElementById('story-stage1-bridge-gradient') || document.getElementById('hero-crimson-atmosphere');
+      if (bridgeEl) {
+        const atmoOpacity = Math.max(0, 1 - p * 3.8);
+        bridgeEl.style.opacity = atmoOpacity.toFixed(3);
+        bridgeEl.style.display = atmoOpacity > 0 ? 'block' : 'none';
+      }
 
       const veil = document.getElementById('story-paper-veil');
       if (veil) {

@@ -8,7 +8,6 @@
 import routesData from '../data/routes.json';
 import { NCR_HOSPITAL_METAS } from '../lib/hospitalTelemetry';
 import { PathLayer } from '@deck.gl/layers';
-import { TripsLayer } from '@deck.gl/geo-layers';
 import type { AssignedRescueNode } from './rescueAndLanding';
 
 export interface SolverTransferDef {
@@ -22,7 +21,7 @@ export interface SolverTransferDef {
   name: string;
 }
 
-// The exact 8 solver transfers shown by default in the workspace (Spec §9 & §11)
+// The exact solver transfers shown in the workspace (Spec §9, §11, §19.4, §20)
 export const DEFAULT_SOLVER_TRANSFERS: SolverTransferDef[] = [
   { id: 'TX-1041', sourceCode: 'N62', targetCode: 'AIM', sourceId: 'ND-04', targetId: 'ND-01', units: 8, eta: 22, name: 'Fortis Noida to AIIMS' },
   { id: 'TX-1042', sourceCode: 'MDT', targetCode: 'GTB', sourceId: 'ND-05', targetId: 'ND-07', units: 6, eta: 41, name: 'Medanta to GTB East Delhi' },
@@ -30,6 +29,7 @@ export const DEFAULT_SOLVER_TRANSFERS: SolverTransferDef[] = [
   { id: 'TX-1044', sourceCode: 'MAX', targetCode: 'SFD', sourceId: 'ND-03', targetId: 'ND-02', units: 6, eta: 12, name: 'Max Saket to Safdarjung' },
   { id: 'TX-1045', sourceCode: 'NBV', targetCode: 'RGV', sourceId: 'ND-20', targetId: 'ND-12', units: 4, eta: 29, name: 'Jaypee Noida to Rajiv Gandhi' },
   { id: 'TX-1046', sourceCode: 'GCH', targetCode: 'DRB', sourceId: 'ND-19', targetId: 'ND-21', units: 4, eta: 34, name: 'Paras Gurugram to DDU Hospital' },
+  { id: 'TX-1047', sourceCode: 'MDT', targetCode: 'MPD', sourceId: 'ND-05', targetId: 'ND-15', units: 6, eta: 11, name: 'Medanta to Manipal Dwarka' },
   { id: 'TX-1039', sourceCode: 'BLK', targetCode: 'ROH', sourceId: 'ND-14', targetId: 'ND-17', units: 6, eta: 20, name: 'BLK-Max to Saroj Rohini' },
   { id: 'TX-1040', sourceCode: 'FSB', targetCode: 'RML', sourceId: 'ND-13', targetId: 'ND-08', units: 4, eta: 16, name: 'Fortis Vasant to RML Central' },
 ];
@@ -178,7 +178,7 @@ interface PrecomputedRoutePair {
   durationS: number;
 }
 
-const PRECOMPUTED_PAIRS: PrecomputedRoutePair[] = (() => {
+export const PRECOMPUTED_PAIRS: PrecomputedRoutePair[] = (() => {
   const pairs: PrecomputedRoutePair[] = [];
   const allRoutes = (routesData as any)?.routes || {};
 
@@ -278,17 +278,17 @@ export function computeRoutesState(
   routeMode: 'story' | 'workspace',
   assignments: AssignedRescueNode[] = []
 ): ComputedRouteRenderItem[] {
-  // In workspace mode, show all 8 solver transfers as quiet road-snapped lines (Spec §11)
+  // In workspace mode, show all 8 solver transfers as authentic road-snapped lines (Spec §2.2 & §2.4)
   if (routeMode === 'workspace') {
     return PRECOMPUTED_PAIRS.map((pair) => ({
       id: pair.transfer.id,
       sourceCode: pair.transfer.sourceCode,
       targetCode: pair.transfer.targetCode,
       coords: pair.road160,
-      coreWidth: 1.5,
-      casingWidth: 3.0,
-      coreColor: [23, 128, 95, 115], // green-600 @ 45% (115/255)
-      casingColor: [243, 238, 228, 220], // paper casing
+      coreWidth: 2.5,
+      casingWidth: 6.0,
+      coreColor: [4, 120, 87, 230], // #047857 dark emerald @ 90%
+      casingColor: [16, 185, 129, 51], // #10B981 outer halo @ 20%
       stage: 'workspace',
     }));
   }
@@ -367,10 +367,10 @@ export function computeRoutesState(
         sourceCode: pair.transfer.sourceCode,
         targetCode: pair.transfer.targetCode,
         coords: pair.road160,
-        coreWidth: 2.5, // 2.5 px green-600
-        casingWidth: 4.5, // 4.5 px paper casing
-        coreColor: [23, 128, 95, 240], // green-600
-        casingColor: [244, 238, 227, 240], // paper casing
+        coreWidth: 2.5, // 2.5 px green-600 / dark emerald
+        casingWidth: 6.0, // 6.0 px outer halo
+        coreColor: [4, 120, 87, 230], // #047857 @ 90%
+        casingColor: [16, 185, 129, 51], // #10B981 @ 20%
         stage: 'C',
       });
     }
@@ -387,8 +387,9 @@ export function createRouteDeckLayers(
   progress: number,
   routeMode: 'story' | 'workspace',
   assignments: AssignedRescueNode[] = [],
-  timeSec = 0
+  _timeSec = 0
 ): any[] {
+  void _timeSec;
   const routes = computeRoutesState(progress, routeMode, assignments);
   if (routes.length === 0) return [];
 
@@ -428,39 +429,8 @@ export function createRouteDeckLayers(
     },
   });
 
-  const layers: any[] = [casingLayer, coreLayer];
-
-  // 3. Stage C TripsLayer Pulse (>= 0.86): One 2.2s pulse per route (Spec §9)
-  if (routeMode === 'story' && progress >= 0.86) {
-    const tripsData = routes.map((r, rIdx) => {
-      // 160 timestamps over 2.2 seconds
-      const timestamps = r.coords.map((_, idx) => (idx / (r.coords.length - 1)) * 2.2);
-      return {
-        path: r.coords,
-        timestamps,
-        vendor: rIdx,
-      };
-    });
-
-    const currentTime = (timeSec % 2.2);
-
-    const tripsLayer = new TripsLayer({
-      id: 'route-flow-trips',
-      data: tripsData,
-      getPath: (d: any) => d.path,
-      getTimestamps: (d: any) => d.timestamps,
-      getColor: [31, 154, 116, 255], // green-500 head
-      currentTime,
-      trailLength: 0.35, // 350ms trail head
-      widthMinPixels: 3.2,
-      capRounded: true,
-      jointRounded: true,
-    });
-
-    layers.push(tripsLayer);
-  }
-
-  return layers;
+  // Spec §20: All routes are static green lines, zero moving elements/pulses (TripsLayer removed)
+  return [casingLayer, coreLayer];
 }
 
 /**
@@ -540,6 +510,7 @@ export function getRouteChecks() {
     snapped: true,
     endpointOffsetMaxM: maxOffsetM,
     redOrOrange: 0,
+    animatedElements: 0,
     routeMorphMonotonic: monotonic,
   };
 }

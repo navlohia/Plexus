@@ -1,13 +1,21 @@
-import { useEffect, useRef } from 'react';
-import { Droplets, ArrowRight } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Droplets, ArrowRight, Volume2, VolumeX, LogIn } from 'lucide-react';
 import { TOKENS, lerpColor } from '../../story/palette';
 import { STORY_BEATS } from '../../story/copy';
+import { soundEngine } from '../../utils/soundEngine';
 
 interface StoryTextLayerProps {
   onOpenMap?: () => void;
 }
 
 export default function StoryTextLayer({ onOpenMap }: StoryTextLayerProps) {
+  // Sound Engine Mute State
+  const [isMuted, setIsMuted] = useState(() => soundEngine.isMuted());
+
+  useEffect(() => {
+    return soundEngine.subscribe((muted) => setIsMuted(muted));
+  }, []);
+
   // DOM element refs for pure imperative per-frame updates (zero React re-renders)
   const beatHeroRef = useRef<HTMLDivElement>(null);
   const beatAgingRef = useRef<HTMLDivElement>(null);
@@ -23,7 +31,6 @@ export default function StoryTextLayer({ onOpenMap }: StoryTextLayerProps) {
   const scrollCueRef = useRef<HTMLDivElement>(null);
   const annotationsRef = useRef<HTMLDivElement>(null);
   const annotationUpperRef = useRef<HTMLDivElement>(null);
-  const annotationLowerRef = useRef<HTMLDivElement>(null);
   const annotationUpperLeftRef = useRef<HTMLDivElement>(null);
 
   const countdownTextRef = useRef<HTMLSpanElement>(null);
@@ -31,8 +38,8 @@ export default function StoryTextLayer({ onOpenMap }: StoryTextLayerProps) {
   const heroScrollTextRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    // Live ticking countdown timer for 119:59:42 REMAINING
-    const baseTotalSeconds = 119 * 3600 + 59 * 60 + 42;
+    // Live ticking countdown timer for 119:59:38 REMAINING
+    const baseTotalSeconds = 119 * 3600 + 59 * 60 + 38;
     const startTime = performance.now();
     const interval = setInterval(() => {
       const elapsedSec = Math.floor((performance.now() - startTime) / 1000);
@@ -263,9 +270,6 @@ export default function StoryTextLayer({ onOpenMap }: StoryTextLayerProps) {
           if (annot && annot.upper && annotationUpperRef.current) {
             annotationUpperRef.current.style.transform = `translate3d(${annot.upper.x.toFixed(1)}px, ${annot.upper.y.toFixed(1)}px, 0)`;
           }
-          if (annot && annot.lower && annotationLowerRef.current) {
-            annotationLowerRef.current.style.transform = `translate3d(${annot.lower.x.toFixed(1)}px, ${annot.lower.y.toFixed(1)}px, 0)`;
-          }
           if (annot && annot.upperLeft && annotationUpperLeftRef.current) {
             annotationUpperLeftRef.current.style.transform = `translate3d(${annot.upperLeft.x.toFixed(1)}px, ${annot.upperLeft.y.toFixed(1)}px, 0)`;
           }
@@ -478,6 +482,37 @@ export default function StoryTextLayer({ onOpenMap }: StoryTextLayerProps) {
           letter-spacing: -0.02em;
         }
 
+        .story-topbar-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          pointer-events: auto;
+        }
+
+        .story-sound-toggle-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          border-radius: 9999px;
+          border: 1px solid #E5E7EB;
+          background: #FFFFFF;
+          color: #111827;
+          font-size: 13.5px;
+          line-height: 1;
+          cursor: pointer;
+          pointer-events: auto;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+          transition: all 0.15s ease;
+          user-select: none;
+        }
+        .story-sound-toggle-btn:hover {
+          background: #F9FAFB;
+          border-color: #D1D5DB;
+          transform: translateY(-1px);
+        }
+
         .story-skip-pill {
           display: inline-flex;
           align-items: center;
@@ -499,6 +534,31 @@ export default function StoryTextLayer({ onOpenMap }: StoryTextLayerProps) {
         .story-skip-pill:hover {
           background: #F9FAFB;
           border-color: #D1D5DB;
+          transform: translateY(-1px);
+        }
+
+        .story-signin-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 7px 14px;
+          border-radius: 9999px;
+          border: 1px solid rgba(225, 29, 72, 0.35);
+          background: rgba(255, 241, 242, 0.85);
+          color: #9F1239;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+          cursor: pointer;
+          pointer-events: auto;
+          box-shadow: 0 1px 3px rgba(225, 29, 72, 0.08);
+          transition: all 0.15s ease;
+        }
+        .story-signin-btn:hover {
+          background: #FFE4E6;
+          border-color: #E11D48;
+          color: #881337;
           transform: translateY(-1px);
         }
 
@@ -548,7 +608,7 @@ export default function StoryTextLayer({ onOpenMap }: StoryTextLayerProps) {
         }
       `}</style>
 
-      {/* 1. Header: Exact workspace logo top-left + Skip to map pill top-right (Spec §2) */}
+      {/* 1. Header: Exact workspace logo top-left + Audio Synthesizer Toggle & Skip to map pill top-right (Spec §1.4, §2) */}
       <div className="story-topbar">
         <div className="story-workspace-logo" onClick={onOpenMap}>
           <div className="story-logo-icon">
@@ -557,35 +617,50 @@ export default function StoryTextLayer({ onOpenMap }: StoryTextLayerProps) {
           <span className="story-logo-text">Plexus</span>
         </div>
 
-        <button
-          type="button"
-          onClick={onOpenMap}
-          className="story-skip-pill"
-          title="Skip straight to live map workspace"
-        >
-          <span>SKIP TO MAP</span>
-          <ArrowRight size={13} strokeWidth={2.2} />
-        </button>
+        <div className="story-topbar-actions">
+          <button
+            type="button"
+            onClick={() => soundEngine.toggleMute()}
+            className="story-sound-toggle-btn"
+            title={isMuted ? "Enable tactile audio effects" : "Mute audio effects"}
+            aria-label={isMuted ? "Enable tactile audio effects" : "Mute audio effects"}
+          >
+            {isMuted ? (
+              <VolumeX size={15} strokeWidth={2.2} color="#6B7280" />
+            ) : (
+              <Volume2 size={15} strokeWidth={2.2} color="#059669" />
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              window.location.hash = '#/signin';
+            }}
+            className="story-signin-btn"
+            title="Sign in to Node Authentication"
+            data-testid="topbar-signin-btn"
+          >
+            <LogIn size={13} strokeWidth={2.2} />
+            <span>SIGN IN</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenMap}
+            className="story-skip-pill"
+            title="Skip straight to live map workspace"
+          >
+            <span>SKIP TO MAP</span>
+            <ArrowRight size={13} strokeWidth={2.2} />
+          </button>
+        </div>
       </div>
 
       {/* 2. Left Column Text (x 8vw-40vw, max-width 36vw, NO cards, pure typography, explicit line breaks) */}
       <div className="story-left-column">
         {/* Beat 0: Hero (0.00 - 0.12) */}
         <div ref={beatHeroRef} className="story-beat-item" style={{ opacity: 1 }}>
-          {/* Sleek Frosted Glass Telemetry Strip */}
-          <button
-            type="button"
-            className="story-telemetry-badge"
-            title="Autonomous Blood Grid Status"
-          >
-            <span className="telemetry-badge-dot" />
-            <span>DELHI-NCR AUTONOMOUS MESH</span>
-            <span className="telemetry-sep">|</span>
-            <span>25 HOSPITALS</span>
-            <span className="telemetry-sep">|</span>
-            <span>FEFO ENGINE ARMED</span>
-          </button>
-
           <h1 className="story-headline">
             {STORY_BEATS.hero.headlineLines.map((line, idx) => (
               <span key={idx} className="story-headline-line">{line}</span>
@@ -753,7 +828,7 @@ export default function StoryTextLayer({ onOpenMap }: StoryTextLayerProps) {
               title="Active platelet viability countdown"
             >
               <span className="pill-dot pill-dot-crimson" />
-              <span ref={countdownTextRef}>119:59:42 REMAINING</span>
+              <span ref={countdownTextRef}>119:59:38 REMAINING</span>
             </button>
           </div>
         </div>
@@ -806,58 +881,6 @@ export default function StoryTextLayer({ onOpenMap }: StoryTextLayerProps) {
             >
               <span className="pill-dot pill-dot-emerald" />
               <span>22.0°C AGITATED</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Lower-Left annotation: ● O-NEG APHERESIS (anchored to lower-left rim) */}
-        <div
-          ref={annotationLowerRef}
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            display: 'flex',
-            alignItems: 'center',
-            willChange: 'transform',
-            transform: 'translate3d(0, 0, 0)',
-            pointerEvents: 'none',
-          }}
-        >
-          {/* 4px ruby contact dot ON silhouette */}
-          <div
-            className="story-contact-dot"
-            style={{
-              position: 'absolute',
-              left: '-2px',
-              top: '-2px',
-              width: '5px',
-              height: '5px',
-              borderRadius: '50%',
-              backgroundColor: '#BE123C',
-              boxShadow: '0 0 8px rgba(190, 18, 60, 0.85)',
-            }}
-          />
-          {/* Hairline leader extending leftward */}
-          <div
-            style={{
-              position: 'absolute',
-              right: '3px',
-              top: '0px',
-              width: '46px',
-              height: '1px',
-              backgroundColor: 'rgba(190, 18, 60, 0.45)',
-            }}
-          />
-          {/* Interactive frosted-glass pill */}
-          <div style={{ position: 'absolute', right: '52px', top: '-15px', pointerEvents: 'auto' }}>
-            <button
-              type="button"
-              className="story-frosted-pill"
-              title="Universal donor component identification"
-            >
-              <span className="pill-dot pill-dot-amber" />
-              <span>O-NEG APHERESIS</span>
             </button>
           </div>
         </div>

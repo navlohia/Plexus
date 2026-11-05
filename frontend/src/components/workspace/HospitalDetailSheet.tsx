@@ -36,8 +36,10 @@ export interface HospitalDetailSheetProps {
   routes: ActiveHospitalRoute[];
   isCandidateMode: boolean;
   isMobile: boolean;
-  onClose: () => void;
-  onDispatch: (targetHospitalId: string, units?: number) => void;
+  onClose?: () => void;
+  onCloseDrawerOnly?: () => void;
+  onFullDismiss?: () => void;
+  onDispatch: (targetHospitalId: string, units?: number, orderId?: string) => void;
   onFocusRoute: (route: ActiveHospitalRoute) => void;
   onHoverRoute: (routeId: string | null) => void;
 }
@@ -48,11 +50,12 @@ export default function HospitalDetailSheet({
   isCandidateMode,
   isMobile,
   onClose,
+  onCloseDrawerOnly,
+  onFullDismiss,
   onDispatch,
   onFocusRoute,
   onHoverRoute,
 }: HospitalDetailSheetProps) {
-  const [showAllBloodGroups, setShowAllBloodGroups] = useState(false);
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(() => routes[0]?.id || null);
   const [isDispatched, setIsDispatched] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -72,25 +75,35 @@ export default function HospitalDetailSheet({
     }
   }, [routes, selectedRouteId]);
 
-  // Handle close transition
-  const handleClose = () => {
+  // Handle [✕] click: closes drawer only, keeps hospital selected and zoomed (Spec §3.4)
+  const handleCloseDrawerOnly = () => {
     setIsClosing(true);
     setTimeout(() => {
-      onClose();
-    }, 260);
+      if (onCloseDrawerOnly) onCloseDrawerOnly();
+      else if (onClose) onClose();
+    }, 220);
   };
 
-  // Esc key listener (A11y per Spec §14)
+  // Handle [ESC] click or Escape key: clears hospital selection and zooms back to overview (Spec §3.4)
+  const handleFullDismiss = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      if (onFullDismiss) onFullDismiss();
+      else if (onClose) onClose();
+    }, 220);
+  };
+
+  // Esc key listener (A11y per Spec §14 & §3.4)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.stopPropagation();
-        handleClose();
+        handleFullDismiss();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [onFullDismiss, onClose]);
 
   // Expose mobile snap control on window for Puppeteer testing
   useEffect(() => {
@@ -111,8 +124,8 @@ export default function HospitalDetailSheet({
   const statusLabel = isShortage
     ? 'Critical shortage'
     : isAtRisk
-    ? '<36h expiry risk'
-    : 'Optimal buffer';
+      ? '<36h expiry risk'
+      : 'Optimal buffer';
 
   // Sub line per Spec §14: <Zone/City> · <Facility type>
   const subLine = hospital.city || `${hospital.short} · Trauma Centre`;
@@ -155,8 +168,6 @@ export default function HospitalDetailSheet({
       .sort((a, b) => a.units - b.units);
   }, [hospital.liveInv, stock]);
 
-  const displayedGroups = showAllBloodGroups ? sortedBloodGroups : sortedBloodGroups.slice(0, 4);
-
   // 4. Optimal / candidate routes
   const bestRoute = routes.find((r) => r.isBest) || routes[0];
   const bestUnits = bestRoute ? (bestRoute.units || 8) : 8;
@@ -166,7 +177,7 @@ export default function HospitalDetailSheet({
   // 5. Dispatch handler
   const handleDispatch = () => {
     if (isDispatched) return;
-    onDispatch(hospital.id, bestUnits);
+    onDispatch(hospital.id, bestUnits, bestRoute?.id);
     setIsDispatched(true);
     setTimeout(() => setIsDispatched(false), 2400);
   };
@@ -183,27 +194,27 @@ export default function HospitalDetailSheet({
       style={
         isMobile
           ? {
-              position: 'fixed',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              width: '100%',
-              height: mobileHeight,
-              maxHeight: mobileHeight,
-              background: 'var(--color-paper-raised, #FAF7F0)',
-              borderTopLeftRadius: '24px',
-              borderTopRightRadius: '24px',
-              borderBottomLeftRadius: 0,
-              borderBottomRightRadius: 0,
-              borderTop: '1px solid rgba(20, 27, 45, 0.10)',
-              borderLeft: 'none',
-              boxShadow: 'none',
-              display: 'flex',
-              flexDirection: 'column',
-              zIndex: 50,
-              overflow: 'hidden',
-              transition: 'height 0.28s cubic-bezier(0.22, 1, 0.36, 1), max-height 0.28s cubic-bezier(0.22, 1, 0.36, 1)',
-            }
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            width: '100%',
+            height: mobileHeight,
+            maxHeight: mobileHeight,
+            background: 'var(--color-paper-raised, #FAF7F0)',
+            borderTopLeftRadius: '24px',
+            borderTopRightRadius: '24px',
+            borderBottomLeftRadius: 0,
+            borderBottomRightRadius: 0,
+            borderTop: '1px solid rgba(20, 27, 45, 0.10)',
+            borderLeft: 'none',
+            boxShadow: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            zIndex: 50,
+            overflow: 'hidden',
+            transition: 'height 0.28s cubic-bezier(0.22, 1, 0.36, 1), max-height 0.28s cubic-bezier(0.22, 1, 0.36, 1)',
+          }
           : undefined
       }
     >
@@ -243,13 +254,13 @@ export default function HospitalDetailSheet({
           flexDirection: 'column',
         }}
       >
-        {/* ── SECTION 1: HEADER ── */}
-        <section className="sheet-section sheet-section-1" style={{ padding: '24px 24px 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* ── SECTION 1: HEADER (Spec §3.3 & §3.4) ── */}
+        <section className="sheet-section sheet-section-1" style={{ padding: '14px 18px 12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
             <span
               style={{
                 fontFamily: "'JetBrains Mono', monospace",
-                fontSize: '12px',
+                fontSize: '11px',
                 fontWeight: 600,
                 color: 'rgba(20, 27, 45, 0.60)',
                 letterSpacing: '0.04em',
@@ -257,26 +268,33 @@ export default function HospitalDetailSheet({
             >
               {hospital.code}
             </span>
-            <button
-              type="button"
-              onClick={handleClose}
-              style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: '11px',
-                fontWeight: 600,
-                color: 'rgba(20, 27, 45, 0.60)',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '4px 6px',
-                minHeight: isMobile ? 44 : 24,
-                display: 'inline-flex',
-                alignItems: 'center',
-              }}
-              title="Close inspector (Esc)"
-            >
-              ESC
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {/* Spec §19.6: Replace the ESC text with a × icon button (1.5 px stroke, ink/60, 40 px hit area, tooltip "Close panel (keeps hospital selected)") */}
+              <button
+                type="button"
+                className="sheet-close-btn"
+                onClick={handleCloseDrawerOnly}
+                style={{
+                  width: 40,
+                  height: 40,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  color: 'rgba(20, 27, 45, 0.60)',
+                  transition: 'color 0.15s ease',
+                }}
+                title="Close panel (keeps hospital selected)"
+                aria-label="Close panel (keeps hospital selected)"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 1L13 13M1 13L13 1" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <h2
@@ -285,12 +303,12 @@ export default function HospitalDetailSheet({
             tabIndex={-1}
             style={{
               fontFamily: "var(--font-main, 'Plus Jakarta Sans', sans-serif)",
-              fontSize: '24px',
-              lineHeight: '28px',
+              fontSize: '15.5px',
+              lineHeight: 1.2,
               fontWeight: 600,
-              letterSpacing: '-0.02em',
+              letterSpacing: '-0.01em',
               color: '#141B2D',
-              margin: '10px 0 4px',
+              margin: '0 0 2px',
               outline: 'none',
             }}
           >
@@ -299,17 +317,17 @@ export default function HospitalDetailSheet({
 
           <div
             style={{
-              fontSize: '13px',
-              lineHeight: '18px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: '11px',
+              lineHeight: 1.2,
               color: 'rgba(20, 27, 45, 0.60)',
-              marginBottom: '12px',
+              marginBottom: '10px',
             }}
           >
-            {subLine}
-          </div>
-
-          {/* Status: 6px dot + text (text only, NO pill badge per Spec §14) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span>{subLine}</span>
+            <span style={{ color: 'rgba(20, 27, 45, 0.3)' }}>·</span>
             <span
               style={{
                 width: 6,
@@ -322,10 +340,8 @@ export default function HospitalDetailSheet({
             />
             <span
               style={{
-                fontSize: '12.5px',
                 fontWeight: 600,
                 color: statusTextColor,
-                letterSpacing: '0.01em',
               }}
             >
               {statusLabel}
@@ -333,12 +349,12 @@ export default function HospitalDetailSheet({
           </div>
         </section>
 
-        {/* ── SECTION 2: BALANCE ── */}
-        <section className="sheet-section sheet-section-2">
+        {/* ── SECTION 2: BALANCE (Spec §3.3) ── */}
+        <section className="sheet-section sheet-section-2" style={{ padding: '12px 18px' }}>
           <div
             style={{
               fontFamily: "'JetBrains Mono', monospace",
-              fontSize: '11px',
+              fontSize: '10px',
               fontWeight: 600,
               letterSpacing: '0.05em',
               color: 'rgba(20, 27, 45, 0.55)',
@@ -348,35 +364,35 @@ export default function HospitalDetailSheet({
             NET BALANCE
           </div>
 
-          {/* Numeral at 56/56 in the state's 700 shade per Spec §14 */}
+          {/* Numeral at 26px font-weight 700 per Spec §3.3 */}
           <div
             style={{
-              fontSize: '56px',
-              lineHeight: '56px',
-              fontWeight: 600,
+              fontSize: '26px',
+              lineHeight: 1.1,
+              fontWeight: 700,
               fontVariantNumeric: 'tabular-nums',
-              letterSpacing: '-0.03em',
+              letterSpacing: '-0.02em',
               color: statusTextColor,
-              margin: '10px 0 10px',
+              margin: '3px 0 4px',
             }}
           >
             {netBalance < 0 ? `−${Math.abs(netBalance)}u` : `+${netBalance}u`}
           </div>
 
-          {/* One human sentence beneath it */}
+          {/* Explanation sentence in 11px per Spec §3.3 */}
           <p
             style={{
-              fontSize: '13px',
-              lineHeight: '19px',
+              fontSize: '11px',
+              lineHeight: '15px',
               color: 'rgba(20, 27, 45, 0.70)',
-              margin: '0 0 16px',
+              margin: '0 0 8px',
             }}
           >
-            {stock} units on hand. {exp36} expire within 36 hours.
+            {stock} units on hand, {exp36} expire within 36 hours.
           </p>
 
-          {/* 2px Ruler derived from existing targetBaseline need (Spec §14) */}
-          <div style={{ position: 'relative', width: '100%', paddingTop: 4, paddingBottom: 16 }}>
+          {/* 2px Ruler derived from existing targetBaseline need (Spec §14 & §3.3) */}
+          <div style={{ position: 'relative', width: '100%', paddingTop: 2, paddingBottom: 10 }}>
             <div
               style={{
                 position: 'relative',
@@ -385,7 +401,6 @@ export default function HospitalDetailSheet({
                 background: 'rgba(20, 27, 45, 0.10)',
               }}
             >
-              {/* Solid segment = usable stock */}
               <div
                 style={{
                   position: 'absolute',
@@ -396,8 +411,6 @@ export default function HospitalDetailSheet({
                   backgroundColor: statusTextColor,
                 }}
               />
-
-              {/* Hatched segment = expiring stock */}
               <div
                 style={{
                   position: 'absolute',
@@ -409,28 +422,25 @@ export default function HospitalDetailSheet({
                     'repeating-linear-gradient(45deg, rgba(20, 27, 45, 0.35), rgba(20, 27, 45, 0.35) 2px, transparent 2px, transparent 4px)',
                 }}
               />
-
-              {/* End tick labeled with the target need */}
               <div
                 style={{
                   position: 'absolute',
                   left: `${targetTickPct}%`,
-                  top: -4,
+                  top: -3,
                   width: 1,
-                  height: 10,
+                  height: 8,
                   backgroundColor: 'rgba(20, 27, 45, 0.40)',
                 }}
               />
             </div>
-
             <div
               style={{
                 position: 'absolute',
                 left: `${targetTickPct}%`,
-                top: 14,
+                top: 10,
                 transform: 'translateX(-50%)',
                 fontFamily: "'JetBrains Mono', monospace",
-                fontSize: '10px',
+                fontSize: '9.5px',
                 color: 'rgba(20, 27, 45, 0.50)',
                 whiteSpace: 'nowrap',
               }}
@@ -440,42 +450,49 @@ export default function HospitalDetailSheet({
           </div>
         </section>
 
-        {/* ── SECTION 3: BLOOD GROUPS ── */}
-        <section className="sheet-section sheet-section-3">
+        {/* ── SECTION 3: BLOOD GROUPS (Compact 2-Column Grid per Spec §3.3) ── */}
+        <section className="sheet-section sheet-section-3" style={{ padding: '10px 18px' }}>
           <div
             style={{
               fontFamily: "'JetBrains Mono', monospace",
-              fontSize: '11px',
+              fontSize: '10px',
               fontWeight: 600,
               letterSpacing: '0.05em',
               color: 'rgba(20, 27, 45, 0.55)',
               textTransform: 'uppercase',
-              marginBottom: '12px',
+              marginBottom: '8px',
             }}
           >
             BLOOD GROUPS
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {displayedGroups.map((item) => (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '6px 12px',
+              fontSize: '11px',
+            }}
+          >
+            {sortedBloodGroups.map((item) => (
               <div
                 key={item.group}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '7px 0',
+                  gap: 6,
+                  fontSize: '11px',
                 }}
               >
-                {/* Group label (mono 13/600) + Units (tabular) */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: 72 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span
                     style={{
                       fontFamily: "'JetBrains Mono', monospace",
-                      fontSize: '13px',
+                      fontSize: '11px',
                       fontWeight: 600,
                       color: '#141B2D',
-                      width: 32,
+                      width: 26,
                     }}
                   >
                     {item.group}
@@ -483,21 +500,20 @@ export default function HospitalDetailSheet({
                   <span
                     style={{
                       fontFamily: "'JetBrains Mono', monospace",
-                      fontSize: '13px',
+                      fontSize: '11px',
                       fontWeight: 500,
                       fontVariantNumeric: 'tabular-nums',
-                      color: '#141B2D',
+                      color: 'rgba(20, 27, 45, 0.85)',
                     }}
                   >
                     {item.units}u
                   </span>
                 </div>
 
-                {/* 2px hairline bar: red-600 when critical, ink/50 otherwise, NEVER green! (Spec §14) */}
                 <div
                   style={{
                     flex: 1,
-                    margin: '0 18px',
+                    margin: '0 4px',
                     height: 2,
                     background: 'rgba(20, 27, 45, 0.08)',
                     position: 'relative',
@@ -515,24 +531,23 @@ export default function HospitalDetailSheet({
                   />
                 </div>
 
-                {/* Status word only when not OK */}
-                <div style={{ width: 56, textAlign: 'right' }}>
+                <div style={{ width: 28, textAlign: 'right' }}>
                   {item.isCritical ? (
                     <span
                       style={{
                         fontFamily: "'JetBrains Mono', monospace",
-                        fontSize: '11px',
+                        fontSize: '9.5px',
                         fontWeight: 600,
                         color: '#DC2626',
                       }}
                     >
-                      critical
+                      crit
                     </span>
                   ) : item.isLow ? (
                     <span
                       style={{
                         fontFamily: "'JetBrains Mono', monospace",
-                        fontSize: '11px',
+                        fontSize: '9.5px',
                         fontWeight: 600,
                         color: '#B45309',
                       }}
@@ -544,46 +559,26 @@ export default function HospitalDetailSheet({
               </div>
             ))}
           </div>
-
-          <button
-            type="button"
-            onClick={() => setShowAllBloodGroups(!showAllBloodGroups)}
-            style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: '11px',
-              fontWeight: 600,
-              color: 'rgba(20, 27, 45, 0.60)',
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '8px 0 0',
-              textAlign: 'left',
-              display: 'inline-block',
-              minHeight: isMobile ? 44 : 24,
-            }}
-          >
-            {showAllBloodGroups ? 'Show top 4 ↑' : 'Show all 8 ↓'}
-          </button>
         </section>
 
-        {/* ── SECTION 4: OPTIMAL / CANDIDATE ROUTES ── */}
-        <section className="sheet-section sheet-section-4">
+        {/* ── SECTION 4: OPTIMAL / CANDIDATE ROUTES (Spec §3.3) ── */}
+        <section className="sheet-section sheet-section-4" style={{ padding: '10px 18px' }}>
           <div
             style={{
               fontFamily: "'JetBrains Mono', monospace",
-              fontSize: '11px',
+              fontSize: '10px',
               fontWeight: 600,
               letterSpacing: '0.05em',
               color: 'rgba(20, 27, 45, 0.55)',
               textTransform: 'uppercase',
-              marginBottom: '14px',
+              marginBottom: '6px',
             }}
           >
             {isCandidateMode ? 'CANDIDATE ROUTES' : 'OPTIMAL ROUTES'} ({routes.length})
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {routes.map((r, rIdx) => {
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {routes.slice(0, 3).map((r, rIdx) => {
               const isSelected = selectedRouteId === r.id;
               const isBest = r.isBest || (!isCandidateMode && rIdx === 0);
               const partnerShort = NCR_HOSPITAL_METAS[r.partnerId]?.short || r.partnerCode;
@@ -594,6 +589,8 @@ export default function HospitalDetailSheet({
               return (
                 <div
                   key={r.id}
+                  className="sheet-route-row"
+                  data-testid={`sheet-route-${r.id}`}
                   onClick={() => {
                     setSelectedRouteId(r.id);
                     onFocusRoute(r);
@@ -601,12 +598,12 @@ export default function HospitalDetailSheet({
                   onMouseEnter={() => onHoverRoute(r.id)}
                   onMouseLeave={() => onHoverRoute(null)}
                   style={{
-                    padding: '8px 12px',
+                    padding: '8px 10px',
+                    fontSize: '11px',
                     borderLeft: isSelected ? '2px solid #16A34A' : '2px solid transparent',
-                    background: isSelected ? 'rgba(22, 163, 74, 0.04)' : 'transparent',
+                    background: isSelected ? 'rgba(22, 163, 74, 0.05)' : 'transparent',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
-                    minHeight: isMobile ? 44 : undefined,
                   }}
                 >
                   <div
@@ -617,13 +614,13 @@ export default function HospitalDetailSheet({
                       marginBottom: 2,
                     }}
                   >
-                    <span style={{ fontSize: '13.5px', fontWeight: 600, color: '#141B2D' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#141B2D' }}>
                       {r.partnerCode} · {partnerShort}
                     </span>
                     <span
                       style={{
                         fontFamily: "'JetBrains Mono', monospace",
-                        fontSize: '13px',
+                        fontSize: '11px',
                         fontWeight: 600,
                         fontVariantNumeric: 'tabular-nums',
                         color: '#141B2D',
@@ -637,7 +634,7 @@ export default function HospitalDetailSheet({
                     <span
                       style={{
                         fontFamily: "'JetBrains Mono', monospace",
-                        fontSize: '11px',
+                        fontSize: '10.5px',
                         color: 'rgba(20, 27, 45, 0.55)',
                       }}
                     >
@@ -647,7 +644,7 @@ export default function HospitalDetailSheet({
                       <span
                         style={{
                           fontFamily: "'JetBrains Mono', monospace",
-                          fontSize: '11px',
+                          fontSize: '10.5px',
                           fontWeight: 600,
                           color: '#16A34A',
                         }}
@@ -658,7 +655,7 @@ export default function HospitalDetailSheet({
                       <span
                         style={{
                           fontFamily: "'JetBrains Mono', monospace",
-                          fontSize: '11px',
+                          fontSize: '10.5px',
                           color: 'rgba(20, 27, 45, 0.50)',
                         }}
                       >
@@ -672,11 +669,11 @@ export default function HospitalDetailSheet({
           </div>
         </section>
 
-        {/* ── SECTION 5: COLD CHAIN ── */}
+        {/* ── SECTION 5: COLD CHAIN (Spec §3.3) ── */}
         <section
           className="sheet-section sheet-section-5"
           style={{
-            padding: '16px 24px',
+            padding: '8px 18px',
             borderBottom: 'none',
           }}
         >
@@ -705,14 +702,14 @@ export default function HospitalDetailSheet({
         </section>
       </div>
 
-      {/* ── SECTION 6: STICKY FOOTER ── */}
+      {/* ── SECTION 6: STICKY FOOTER (Spec §3.3: 36px Dispatch CTA button) ── */}
       <footer
         style={{
           position: 'sticky',
           bottom: 0,
           background: 'var(--color-paper-raised, #FAF7F0)',
           borderTop: '1px solid rgba(20, 27, 45, 0.08)',
-          padding: '16px 24px',
+          padding: '10px 18px',
           flexShrink: 0,
           zIndex: 10,
         }}
@@ -723,17 +720,18 @@ export default function HospitalDetailSheet({
           disabled={isDispatched}
           style={{
             width: '100%',
+            height: 36,
+            minHeight: 36,
             background: isDispatched ? '#047857' : '#15997A',
             color: '#FFFFFF',
             border: 'none',
-            borderRadius: '10px',
-            padding: '13px 18px',
-            fontSize: '13px',
-            fontWeight: 700,
+            borderRadius: '8px',
+            padding: '0 14px',
+            fontSize: '12px',
+            fontWeight: 600,
             fontFamily: isDispatched ? "'JetBrains Mono', monospace" : 'inherit',
             cursor: isDispatched ? 'default' : 'pointer',
             transition: 'background 0.2s ease',
-            minHeight: 44, // Touch target >= 44px (A11y per Spec §14)
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

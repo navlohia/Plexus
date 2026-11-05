@@ -356,10 +356,10 @@
   }
 }
 
-/* Left Stack of Flighty Cards (Spec §11: width 400px, 360px below 1400px) */
+/* Left Stack of Flighty Cards (Spec §11 & §3.1: docked below top filter bar, width 400px, 360px below 1400px) */
 .flighty-left-cards-stack {
   position: absolute;
-  top: 16px;
+  top: 56px;
   left: 18px;
   bottom: 16px;
   width: 400px;
@@ -665,10 +665,10 @@
   }
 }
 
-/* Stagger sections by 50ms */
+/* Section styling with compact padding (Spec §3.3) */
 .sheet-section {
   border-bottom: 1px solid rgba(20, 27, 45, 0.08);
-  padding: 24px 24px;
+  padding: 12px 18px;
   animation: sectionEnter 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
