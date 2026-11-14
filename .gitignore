@@ -11,9 +11,7 @@ tmp/
 *.log
 trace*.json
 
-# API & Secrets
-api/
-api
+# Secrets & API Keys
 *.key
 *api_key*
 *apikey*
