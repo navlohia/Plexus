@@ -47,7 +47,7 @@ export const Sheet: React.FC<SheetProps> = ({
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 100,
+        zIndex: 1500,
         background: 'rgba(20, 27, 45, 0.45)',
         backdropFilter: 'blur(4px)',
         WebkitBackdropFilter: 'blur(4px)',

@@ -539,84 +539,86 @@ export const HospitalPortalShell: React.FC<HospitalPortalShellProps> = ({
       )}
 
       {/* 7. Aesthetic Floating Sign In Button (Bottom Right) */}
-      <button
-        type="button"
-        data-testid="hospital-signin-button"
-        onClick={() => {
-          window.location.hash = '#/signin';
-        }}
-        aria-label="Sign in"
-        className="hospital-portal-floating-signin"
-        style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          zIndex: 1000,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '9px',
-          padding: '10px 18px',
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(15, 23, 42, 0.12)',
-          borderRadius: '9999px',
-          boxShadow: '0 10px 25px -3px rgba(15, 23, 42, 0.12), 0 4px 6px -2px rgba(15, 23, 42, 0.05)',
-          color: '#0F172A',
-          fontSize: '13px',
-          fontWeight: 600,
-          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-          letterSpacing: '-0.01em',
-          cursor: 'pointer',
-          outline: 'none',
-          transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateY(-2px)';
-          e.currentTarget.style.boxShadow = '0 14px 34px -4px rgba(15, 23, 42, 0.18), 0 6px 12px -2px rgba(15, 23, 42, 0.08)';
-          e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.5)';
-          e.currentTarget.style.background = '#FFFFFF';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = '0 10px 25px -3px rgba(15, 23, 42, 0.12), 0 4px 6px -2px rgba(15, 23, 42, 0.05)';
-          e.currentTarget.style.borderColor = 'rgba(15, 23, 42, 0.12)';
-          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)';
-        }}
-        title="Sign In (Reroutes to Sign In page)"
-      >
-        <span
-          style={{
-            position: 'relative',
-            display: 'flex',
-            width: '8px',
-            height: '8px',
+      {!showRequestModal && !showCommandPalette && (
+        <button
+          type="button"
+          data-testid="hospital-signin-button"
+          onClick={() => {
+            window.location.hash = '#/signin';
           }}
+          aria-label="Sign in"
+          className="hospital-portal-floating-signin"
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            zIndex: 900,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '9px',
+            padding: '10px 18px',
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: '1px solid rgba(15, 23, 42, 0.12)',
+            borderRadius: '9999px',
+            boxShadow: '0 10px 25px -3px rgba(15, 23, 42, 0.12), 0 4px 6px -2px rgba(15, 23, 42, 0.05)',
+            color: '#0F172A',
+            fontSize: '13px',
+            fontWeight: 600,
+            fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+            letterSpacing: '-0.01em',
+            cursor: 'pointer',
+            outline: 'none',
+            transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 14px 34px -4px rgba(15, 23, 42, 0.18), 0 6px 12px -2px rgba(15, 23, 42, 0.08)';
+            e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.5)';
+            e.currentTarget.style.background = '#FFFFFF';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 10px 25px -3px rgba(15, 23, 42, 0.12), 0 4px 6px -2px rgba(15, 23, 42, 0.05)';
+            e.currentTarget.style.borderColor = 'rgba(15, 23, 42, 0.12)';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)';
+          }}
+          title="Sign In (Reroutes to Sign In page)"
         >
           <span
             style={{
-              position: 'absolute',
-              inset: 0,
-              borderRadius: '50%',
-              background: '#10B981',
-              opacity: 0.75,
-              animation: 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite',
-            }}
-          />
-          <span
-            style={{
               position: 'relative',
-              display: 'inline-flex',
-              borderRadius: '50%',
+              display: 'flex',
               width: '8px',
               height: '8px',
-              background: '#10B981',
             }}
-          />
-        </span>
-        <LogIn size={15} color="#0F172A" strokeWidth={2.2} />
-        <span>Sign In</span>
-      </button>
+          >
+            <span
+              style={{
+                position: 'absolute',
+                inset: 0,
+                borderRadius: '50%',
+                background: '#10B981',
+                opacity: 0.75,
+                animation: 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite',
+              }}
+            />
+            <span
+              style={{
+                position: 'relative',
+                display: 'inline-flex',
+                borderRadius: '50%',
+                width: '8px',
+                height: '8px',
+                background: '#10B981',
+              }}
+            />
+          </span>
+          <LogIn size={15} color="#0F172A" strokeWidth={2.2} />
+          <span>Sign In</span>
+        </button>
+      )}
 
       {/* 8. Floating GraphDB AI Copilot Chatbot (Bottom Left) */}
       <GraphChatbot />

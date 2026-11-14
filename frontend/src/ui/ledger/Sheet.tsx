@@ -59,7 +59,7 @@ export const Sheet: React.FC<SheetProps> = ({
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 1000,
+        zIndex: 1500,
         background: 'rgba(20, 23, 28, 0.3)',
         display: 'flex',
         justifyContent: 'flex-end',
@@ -191,6 +191,7 @@ export const Sheet: React.FC<SheetProps> = ({
             {footerActionLabel && onFooterAction && (
               <Button
                 variant="primary"
+                data-testid="submit-platelet-request-btn"
                 onClick={onFooterAction}
                 disabled={isSubmitting}
                 style={{ height: '44px', minHeight: '44px', padding: '0 20px', borderRadius: 999 }}
