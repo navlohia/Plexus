@@ -1,0 +1,207 @@
+/**
+ * src/ui/cockpit/tokens.css
+ * Cockpit Design System Tokens (Hospital Portal)
+ * Sampled from Dispatch Dashboard CSS per HOSPITAL_UI_SPEC.md Section 2
+ */
+
+:root {
+  /* Surface & Page */
+  --cockpit-page-bg: #E9EBF2;
+  --cockpit-card-bg: #FFFFFF;
+  --cockpit-card-bg-subtle: #F8FAFC;
+  --cockpit-content-max-width: 1320px;
+
+  /* Typography */
+  --cockpit-font-display: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --cockpit-font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --cockpit-font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+  /* Radii */
+  --cockpit-radius-hero: 32px;
+  --cockpit-radius-card: 24px;
+  --cockpit-radius-inner: 16px;
+  --cockpit-radius-pill: 9999px;
+  --cockpit-radius-sm: 8px;
+
+  /* Shadows */
+  --cockpit-shadow-card: 0 1px 2px rgba(20, 27, 45, 0.04), 0 12px 32px rgba(20, 27, 45, 0.06);
+  --cockpit-shadow-lift: 0 4px 12px rgba(20, 27, 45, 0.06), 0 20px 48px rgba(20, 27, 45, 0.08);
+  --cockpit-shadow-popover: 0 12px 32px rgba(20, 27, 45, 0.12), 0 1px 3px rgba(20, 27, 45, 0.06);
+  --cockpit-shadow-vehicle-ground: 0 16px 28px -6px rgba(20, 27, 45, 0.22);
+
+  /* Hairlines & Borders */
+  --cockpit-hairline: 1px solid rgba(20, 27, 45, 0.08);
+  --cockpit-hairline-subtle: 1px solid rgba(20, 27, 45, 0.04);
+  --cockpit-hairline-strong: 1px solid rgba(20, 27, 45, 0.14);
+
+  /* Ink */
+  --cockpit-ink-primary: #141B2D;
+  --cockpit-ink-secondary: rgba(20, 27, 45, 0.70);
+  --cockpit-ink-muted: rgba(20, 27, 45, 0.60);
+  --cockpit-ink-subtle: rgba(20, 27, 45, 0.40);
+  --cockpit-ink-faint: rgba(20, 27, 45, 0.20);
+
+  /* Lavender Series (Selection, Progress, Neutral) */
+  --cockpit-lavender-50: #F5F3FF;
+  --cockpit-lavender-100: #EFE9FE;
+  --cockpit-lavender-200: #DDD6FE;
+  --cockpit-lavender-500: #8B5CF6;
+  --cockpit-lavender-600: #7C3AED;
+  --cockpit-lavender-800: #5B21B6;
+
+  /* Status Colors: Red (Alert / Short) */
+  --cockpit-red-bg: #FEE2E2;
+  --cockpit-red-border: #FCA5A5;
+  --cockpit-red-text: #991B1B;
+  --cockpit-red-solid: #DC2626;
+
+  /* Status Colors: Amber (At Risk / Delayed) */
+  --cockpit-amber-bg: #FEF3C7;
+  --cockpit-amber-border: #FCD34D;
+  --cockpit-amber-text: #92400E;
+  --cockpit-amber-solid: #D97706;
+
+  /* Status Colors: Green (On Time / OK, Primary Action) */
+  --cockpit-green-bg: #DCFCE7;
+  --cockpit-green-border: #86EFAC;
+  --cockpit-green-text: #166534;
+  --cockpit-green-solid: #16A34A;
+  --cockpit-green-dark: #15803D;
+
+  /* Neutral Grey */
+  --cockpit-grey-bg: #F1F3F5;
+  --cockpit-grey-border: #E2E8F0;
+  --cockpit-grey-text: #475569;
+
+  /* Glass Chip (Vehicle Overlay Only) */
+  --cockpit-glass-bg: rgba(255, 255, 255, 0.65);
+  --cockpit-glass-border: 1px solid rgba(255, 255, 255, 0.70);
+  --cockpit-glass-blur: blur(12px);
+
+  /* Allowed Hero Tint */
+  --cockpit-hero-lavender-tint: radial-gradient(ellipse at 70% 50%, rgba(139, 92, 246, 0.14) 0%, rgba(139, 92, 246, 0.04) 50%, transparent 75%);
+
+  /* Motion */
+  --cockpit-transition-micro: 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  --cockpit-transition-ui: 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Tabular figures everywhere per HOSPITAL_UI_SPEC.md 2 */
+.cockpit-tabular,
+.cockpit-root,
+.cockpit-root * {
+  font-feature-settings: 'tnum' 1, 'cv02' 1, 'cv03' 1, 'cv04' 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Mono strictly for IDs and hospital codes */
+.cockpit-mono {
+  font-family: var(--cockpit-font-mono) !important;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: -0.01em;
+}
+
+/* Labels: Sentence case, 12/16, ink/60, never letter-spaced uppercase */
+.cockpit-label {
+  font-family: var(--cockpit-font-display);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--cockpit-ink-muted);
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+/* Glass chip over hero vehicle art */
+.cockpit-glass-chip {
+  background: var(--cockpit-glass-bg);
+  backdrop-filter: var(--cockpit-glass-blur);
+  -webkit-backdrop-filter: var(--cockpit-glass-blur);
+  border: var(--cockpit-glass-border);
+  box-shadow: 0 2px 8px rgba(20, 27, 45, 0.08);
+  border-radius: var(--cockpit-radius-pill);
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cockpit-ink-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Skeleton loader in card tone (no shimmer gradient per section 9) */
+.cockpit-skeleton {
+  background-color: rgba(20, 27, 45, 0.06);
+  border-radius: 8px;
+  animation: cockpit-fade 1.6s ease-in-out infinite;
+}
+
+@keyframes cockpit-fade {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.90; }
+}
+
+/* First-load staggered reveal: 60ms steps, 360ms ease-out per Section 10 */
+@keyframes cockpit-reveal-stagger {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cockpit-stagger-1 {
+  animation: cockpit-reveal-stagger 360ms cubic-bezier(0.16, 1, 0.3, 1) 0ms backwards;
+}
+.cockpit-stagger-2 {
+  animation: cockpit-reveal-stagger 360ms cubic-bezier(0.16, 1, 0.3, 1) 60ms backwards;
+}
+.cockpit-stagger-3 {
+  animation: cockpit-reveal-stagger 360ms cubic-bezier(0.16, 1, 0.3, 1) 120ms backwards;
+}
+.cockpit-stagger-4 {
+  animation: cockpit-reveal-stagger 360ms cubic-bezier(0.16, 1, 0.3, 1) 180ms backwards;
+}
+.cockpit-stagger-5 {
+  animation: cockpit-reveal-stagger 360ms cubic-bezier(0.16, 1, 0.3, 1) 240ms backwards;
+}
+
+/* Skeletons and content fade-in over 160ms per Section 9 */
+.cockpit-fade-in {
+  animation: cockpit-fade-in-kf 160ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes cockpit-fade-in-kf {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Accessible focus outline per Section 11 */
+:focus-visible {
+  outline: 2px solid var(--cockpit-lavender-500) !important;
+  outline-offset: 2px !important;
+}
+
+/* Reduced motion = instant per Section 10 */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .cockpit-skeleton,
+  .cockpit-fade-in,
+  .cockpit-stagger-1,
+  .cockpit-stagger-2,
+  .cockpit-stagger-3,
+  .cockpit-stagger-4,
+  .cockpit-stagger-5 {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+

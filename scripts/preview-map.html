@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { background: #F2F3F7; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .card { background: white; border-radius: 16px; padding: 16px 18px; width: 340px; box-sizing: border-box; box-shadow: 0 4px 20px rgba(0,0,0,0.04); position: relative; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .title { font-size: 15px; font-weight: 700; color: #18181B; }
+    .pill { background: #F2F3F7; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #18181B; }
+    .footer { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 14px; }
+    .stat-lbl { font-size: 11px; color: #71717A; margin-bottom: 2px; }
+    .stat-val { font-size: 18px; font-weight: 700; color: #18181B; }
+    .legend-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #71717A; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <span class="title">Coverage · NCR</span>
+      <span class="pill">All NCR ⌄</span>
+    </div>
+    <div style="position: relative; height: 160px; overflow: visible;">
+      <svg viewBox="0 0 310 160" style="width: 100%; height: 100%; display: block; overflow: visible;">
+        <defs>
+          <filter id="pillShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#0F172A" flood-opacity="0.18" />
+          </filter>
+        </defs>
+
+        <!-- District Polygons (Contiguous, separated by 1.5px white borders) -->
+        <!-- 1. North-West Delhi (NW) -->
+        <path id="NW"
+          d="M 62 30 C 82 18, 116 16, 138 20 C 144 26, 148 36, 150 48 L 148 68 C 132 68, 114 70, 94 70 C 80 62, 70 50, 62 30 Z"
+          fill="#E4E4E7" stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round" />
+
+        <!-- 2. North-East / Shahdara (GTB Zone) -->
+        <path id="GTB"
+          d="M 154 22 C 172 18, 194 18, 210 24 C 218 34, 222 46, 218 64 C 200 66, 182 66, 166 66 C 160 52, 156 38, 154 22 Z"
+          fill="#FDBA74" stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round" />
+
+        <!-- 3. Ghaziabad (GZB) -->
+        <path id="GZB"
+          d="M 210 24 C 235 18, 265 18, 288 28 C 298 42, 296 62, 284 76 C 262 76, 240 76, 222 74 C 220 68, 222 56, 218 45 C 216 36, 214 30, 210 24 Z"
+          fill="#FDBA74" stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round" />
+
+        <!-- 4. West Delhi (WD) -->
+        <path id="WD"
+          d="M 62 30 C 70 50, 80 62, 94 70 L 102 70 C 104 84, 106 98, 108 108 C 90 110, 72 110, 56 106 C 42 94, 38 78, 44 60 C 50 48, 56 38, 62 30 Z"
+          fill="#E4E4E7" stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round" />
+
+        <!-- 5. Central & New Delhi (Apex) -->
+        <path id="CD"
+          d="M 94 70 C 114 70, 132 68, 148 68 C 158 68, 166 68, 168 76 C 170 88, 172 100, 172 106 C 152 108, 130 110, 108 108 C 106 98, 104 84, 102 70 L 94 70 Z"
+          fill="#C084FC" stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round" />
+
+        <!-- 6. Noida / G.B. Nagar (NOI) -->
+        <path id="NOI"
+          d="M 172 74 C 188 74, 206 74, 222 74 C 240 76, 262 76, 284 76 C 286 94, 282 114, 268 132 C 244 134, 218 136, 194 136 C 186 126, 178 116, 172 106 C 172 96, 172 84, 172 74 Z"
+          fill="#C084FC" stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round" />
+
+        <!-- 7. South Delhi (SD) -->
+        <path id="SD"
+          d="M 108 108 C 130 110, 152 108, 172 106 C 178 116, 186 126, 194 136 C 178 144, 160 148, 140 148 C 126 142, 116 130, 108 108 Z"
+          fill="#334155" stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round" />
+
+        <!-- 8. Gurugram (GGN) -->
+        <path id="GGN"
+          d="M 56 106 C 72 110, 90 110, 108 108 C 116 130, 126 142, 140 148 C 130 156, 114 160, 96 160 C 66 160, 42 152, 30 136 C 36 122, 44 112, 56 106 Z"
+          fill="#FDE68A" stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round" />
+
+        <!-- 9. Faridabad (FBD) -->
+        <path id="FBD"
+          d="M 140 148 C 160 148, 178 144, 194 136 C 218 136, 244 134, 268 132 C 262 148, 246 158, 224 160 C 196 160, 168 158, 140 148 Z"
+          fill="#E4E4E7" stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round" />
+
+        <!-- Curved Yamuna River Channel (#BAE6FD) -->
+        <path
+          d="M 152 16 Q 156 42 162 66 Q 168 86 172 104 Q 180 124 192 140 Q 200 152 208 162"
+          stroke="#BAE6FD" stroke-width="2.6" stroke-linecap="round" fill="none" />
+
+        <!-- Floating Moveon-Style Dark Tooltip Pill -->
+        <g transform="translate(138, 48)">
+          <rect x="-68" y="-14" width="136" height="26" rx="7" fill="#1E293B" filter="url(#pillShadow)" />
+          <polygon points="-5,12 5,12 0,17" fill="#1E293B" />
+          <text x="0" y="3" fill="#FFFFFF" font-size="10.5" font-weight="600" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif">
+            Central NCR · 64u in transit
+          </text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="footer">
+      <div>
+        <div class="stat-lbl">Units in transit</div>
+        <div class="stat-val">64u</div>
+      </div>
+      <div>
+        <div class="stat-lbl">On-time delivery</div>
+        <div class="stat-val">92.6%</div>
+      </div>
+      <div>
+        <div class="legend-item" style="margin-bottom: 3px;">
+          <div style="width: 7px; height: 7px; border-radius: 50%; background: #C084FC;"></div>
+          <span>4 Surplus</span>
+        </div>
+        <div class="legend-item">
+          <div style="width: 7px; height: 7px; border-radius: 50%; background: #FDBA74;"></div>
+          <span>1 Shortage</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

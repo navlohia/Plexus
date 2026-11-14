@@ -1,0 +1,278 @@
+[
+  {
+    "code": "AIM",
+    "id": "ND-01",
+    "name": "AIIMS Trauma",
+    "fullName": "AIIMS Trauma & Dengue Center",
+    "city": "Central Delhi",
+    "zone": "Central Delhi",
+    "lat": 28.567,
+    "lng": 77.209,
+    "tier": "hub"
+  },
+  {
+    "code": "SFD",
+    "id": "ND-02",
+    "name": "Safdarjung",
+    "fullName": "Safdarjung Super Specialty",
+    "city": "South Delhi",
+    "zone": "South Delhi",
+    "lat": 28.552,
+    "lng": 77.195,
+    "tier": "large"
+  },
+  {
+    "code": "MAX",
+    "id": "ND-03",
+    "name": "Max Saket",
+    "fullName": "Max Super Specialty Saket",
+    "city": "South Delhi",
+    "zone": "South Delhi",
+    "lat": 28.53,
+    "lng": 77.214,
+    "tier": "hub"
+  },
+  {
+    "code": "N62",
+    "id": "ND-04",
+    "name": "Fortis Noida",
+    "fullName": "Fortis Hospital Sec-62 Noida",
+    "city": "Noida",
+    "zone": "Noida",
+    "lat": 28.62,
+    "lng": 77.33,
+    "tier": "hub"
+  },
+  {
+    "code": "MDT",
+    "id": "ND-05",
+    "name": "Medanta Hub",
+    "fullName": "Medanta The Medicity Hub",
+    "city": "Gurugram",
+    "zone": "Gurugram",
+    "lat": 28.535,
+    "lng": 77.118,
+    "tier": "hub"
+  },
+  {
+    "code": "FTN",
+    "id": "ND-06",
+    "name": "Fortis Okhla",
+    "fullName": "Fortis Escorts Heart Okhla",
+    "city": "South Delhi",
+    "zone": "South Delhi",
+    "lat": 28.56,
+    "lng": 77.278,
+    "tier": "mid"
+  },
+  {
+    "code": "GTB",
+    "id": "ND-07",
+    "name": "GTB East Delhi",
+    "fullName": "GTB Hospital Dilshad Garden",
+    "city": "East Delhi",
+    "zone": "East Delhi",
+    "lat": 28.645,
+    "lng": 77.309,
+    "tier": "large"
+  },
+  {
+    "code": "RML",
+    "id": "ND-08",
+    "name": "RML Central",
+    "fullName": "Dr. RML Hospital Connaught",
+    "city": "Central Delhi",
+    "zone": "Central Delhi",
+    "lat": 28.625,
+    "lng": 77.202,
+    "tier": "large"
+  },
+  {
+    "code": "LNJ",
+    "id": "ND-09",
+    "name": "Lok Nayak",
+    "fullName": "Lok Nayak Jai Prakash (LNJP)",
+    "city": "Central Delhi",
+    "zone": "Central Delhi",
+    "lat": 28.636,
+    "lng": 77.239,
+    "tier": "large"
+  },
+  {
+    "code": "SGR",
+    "id": "ND-10",
+    "name": "Sir Ganga Ram",
+    "fullName": "Sir Ganga Ram Hospital",
+    "city": "Old Rajinder",
+    "zone": "Central Delhi",
+    "lat": 28.618,
+    "lng": 77.189,
+    "tier": "hub"
+  },
+  {
+    "code": "APL",
+    "id": "ND-11",
+    "name": "Apollo Sarita",
+    "fullName": "Indraprastha Apollo Hospital",
+    "city": "South Delhi",
+    "zone": "South Delhi",
+    "lat": 28.54,
+    "lng": 77.284,
+    "tier": "hub"
+  },
+  {
+    "code": "RGV",
+    "id": "ND-12",
+    "name": "Rajiv Gandhi",
+    "fullName": "Rajiv Gandhi Super Specialty",
+    "city": "East Delhi",
+    "zone": "East Delhi",
+    "lat": 28.642,
+    "lng": 77.318,
+    "tier": "large"
+  },
+  {
+    "code": "FSB",
+    "id": "ND-13",
+    "name": "Fortis Vasant",
+    "fullName": "Fortis Flt Lt Rajan Dhall",
+    "city": "South Delhi",
+    "zone": "South Delhi",
+    "lat": 28.532,
+    "lng": 77.156,
+    "tier": "mid"
+  },
+  {
+    "code": "BLK",
+    "id": "ND-14",
+    "name": "BLK-Max Pusa",
+    "fullName": "BLK-Max Super Specialty",
+    "city": "Central Delhi",
+    "zone": "Central Delhi",
+    "lat": 28.622,
+    "lng": 77.181,
+    "tier": "hub"
+  },
+  {
+    "code": "MPD",
+    "id": "ND-15",
+    "name": "Manipal Dwarka",
+    "fullName": "Manipal Hospital Dwarka",
+    "city": "West Delhi",
+    "zone": "West Delhi",
+    "lat": 28.58,
+    "lng": 77.11,
+    "tier": "large"
+  },
+  {
+    "code": "STP",
+    "id": "ND-16",
+    "name": "St. Stephens",
+    "fullName": "St. Stephen's Hospital Tis Hazari",
+    "city": "North Delhi",
+    "zone": "North Delhi",
+    "lat": 28.64,
+    "lng": 77.217,
+    "tier": "large"
+  },
+  {
+    "code": "ROH",
+    "id": "ND-17",
+    "name": "Saroj Rohini",
+    "fullName": "Saroj Super Specialty Rohini",
+    "city": "North Delhi",
+    "zone": "North Delhi",
+    "lat": 28.64,
+    "lng": 77.135,
+    "tier": "mid"
+  },
+  {
+    "code": "DWK",
+    "id": "ND-18",
+    "name": "Venkateshwar",
+    "fullName": "Venkateshwar Hospital Dwarka",
+    "city": "West Delhi",
+    "zone": "West Delhi",
+    "lat": 28.565,
+    "lng": 77.112,
+    "tier": "mid"
+  },
+  {
+    "code": "GCH",
+    "id": "ND-19",
+    "name": "Paras Gurugram",
+    "fullName": "Paras Health Sector 43",
+    "city": "Gurugram",
+    "zone": "Gurugram",
+    "lat": 28.53,
+    "lng": 77.14,
+    "tier": "large"
+  },
+  {
+    "code": "NBV",
+    "id": "ND-20",
+    "name": "Jaypee Noida",
+    "fullName": "Jaypee Hospital Sec-128",
+    "city": "Noida",
+    "zone": "Noida",
+    "lat": 28.545,
+    "lng": 77.33,
+    "tier": "large"
+  },
+  {
+    "code": "DRB",
+    "id": "ND-21",
+    "name": "DDU Hospital",
+    "fullName": "Deen Dayal Upadhyay Hospital",
+    "city": "West Delhi",
+    "zone": "West Delhi",
+    "lat": 28.615,
+    "lng": 77.125,
+    "tier": "mid"
+  },
+  {
+    "code": "SDP",
+    "id": "ND-22",
+    "name": "Sanjay Gandhi",
+    "fullName": "Sanjay Gandhi Memorial Hospital",
+    "city": "North Delhi",
+    "zone": "North Delhi",
+    "lat": 28.64,
+    "lng": 77.12,
+    "tier": "mid"
+  },
+  {
+    "code": "NH4",
+    "id": "ND-23",
+    "name": "Artemis Hub",
+    "fullName": "Artemis Hospital Sector 51",
+    "city": "Gurugram",
+    "zone": "Gurugram",
+    "lat": 28.538,
+    "lng": 77.13,
+    "tier": "hub"
+  },
+  {
+    "code": "MXP",
+    "id": "ND-24",
+    "name": "Max Patparganj",
+    "fullName": "Max Super Specialty Patparganj",
+    "city": "East Delhi",
+    "zone": "East Delhi",
+    "lat": 28.63,
+    "lng": 77.304,
+    "tier": "large"
+  },
+  {
+    "code": "PRS",
+    "id": "ND-25",
+    "name": "Holy Family",
+    "fullName": "Holy Family Hospital Okhla",
+    "city": "South Delhi",
+    "zone": "South Delhi",
+    "lat": 28.548,
+    "lng": 77.273,
+    "tier": "mid"
+  }
+]
+

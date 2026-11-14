@@ -1,0 +1,81 @@
+/* src/ui/ledger/tokens.css */
+/* HOSPITAL_UI_SPEC_V2 Section 2 */
+
+@import "@fontsource/instrument-sans/400.css";
+@import "@fontsource/instrument-sans/500.css";
+@import "@fontsource/instrument-sans/600.css";
+@import "@fontsource/instrument-serif/400.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+
+:root {
+  /* canvas and ink: exact Dispatch studio canvas */
+  --canvas:#F2F3F7; --surface:#FFFFFF; --hairline:rgba(15,23,42,0.06); --hairline-strong:rgba(15,23,42,0.12);
+  --ink:#0F172A; --ink-2:#475569; --ink-3:#64748B; --ink-4:#94A3B8;
+
+  /* one action color: ink. Green is a STATE color, not a button color. */
+  --primary:#0F172A; --primary-text:#FFFFFF; --primary-hover:#1E293B;
+
+  /* state colors: dots, glyphs, numbers. Never fills except the two soft tints below. */
+  --good:#10B981; --warn:#F59E0B; --bad:#EF4444;
+  --warn-tint:rgba(184,111,16,.07); --bad-tint:rgba(196,43,60,.06);
+
+  /* type: sans-serif for UI and Display */
+  --font-ui:"Instrument Sans", "Hanken Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:"JetBrains Mono", ui-monospace, monospace;
+
+  /* modular scale 1.25 from 14 (deliberately not the 12/14/16/18/24/30/36 default stack) */
+  --t12:12px; --t14:14px; --t17:17px; --t22:22px; --t27:27px; --t34:34px;
+  --t42:42px; --t53:53px; --t66:66px;
+
+  /* radius hierarchy */
+  --r-sm:4px; --r-md:6px; --r-lg:10px;
+
+  /* elevation: overlays only */
+  --shadow-pop:0 1px 2px rgba(20,23,28,.06), 0 12px 32px rgba(20,23,28,.10);
+  --shadow-sheet:-1px 0 0 var(--hairline), -24px 0 48px rgba(20,23,28,.08);
+
+  /* layout */
+  --content-max:1120px; --gutter:32px; --gutter-m:16px; --row-h:44px; --topbar-h:52px;
+}
+
+/* Ledger typography baseline rules */
+.ledger-root,
+.ledger-root * {
+  box-sizing: border-box;
+}
+
+.ledger-tabular,
+.ledger-root {
+  font-family: var(--font-ui);
+  font-feature-settings: 'tnum' 1, 'cv02' 1, 'cv03' 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.ledger-display {
+  font-family: var(--font-display);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+}
+
+.ledger-mono {
+  font-family: var(--font-mono) !important;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Reduced motion = instant per Spec */
+@media (prefers-reduced-motion: reduce) {
+  .ledger-root *,
+  .ledger-root *::before,
+  .ledger-root *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

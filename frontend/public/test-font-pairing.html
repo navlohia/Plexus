@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Font Pairing Test: Candidate A vs Candidate B</title>
+  <style>
+    @import "/node_modules/@fontsource/instrument-sans/index.css";
+    @import "/node_modules/@fontsource/instrument-serif/index.css";
+    @import "/node_modules/@fontsource/hanken-grotesk/index.css";
+    @import "/node_modules/@fontsource/fraunces/index.css";
+
+    body {
+      background: #FCFBF8;
+      color: #14171C;
+      font-family: sans-serif;
+      padding: 40px;
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 24px;
+    }
+
+    .test-box {
+      background: #FFFFFF;
+      border: 1px solid #E7E4DC;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .candidate-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #4A4F57;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Candidate A: Instrument Sans + Instrument Serif */
+    .pair-a-ui {
+      font-family: 'Instrument Sans', sans-serif;
+    }
+    .pair-a-display {
+      font-family: 'Instrument Serif', Georgia, serif;
+    }
+
+    /* Candidate B: Hanken Grotesk + Fraunces */
+    .pair-b-ui {
+      font-family: 'Hanken Grotesk', sans-serif;
+    }
+    .pair-b-display {
+      font-family: 'Fraunces', Georgia, serif;
+    }
+
+    .tnum {
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: 'tnum' 1;
+    }
+
+    .pnum {
+      font-variant-numeric: proportional-nums;
+      font-feature-settings: 'tnum' 0;
+    }
+
+    .display-sample {
+      font-size: 53px;
+      line-height: 56px;
+      margin-bottom: 12px;
+    }
+
+    .ui-sample {
+      font-size: 17px;
+      line-height: 24px;
+      margin-bottom: 16px;
+    }
+
+    .digit-grid {
+      display: flex;
+      gap: 16px;
+      font-size: 24px;
+      margin-top: 12px;
+      border-top: 1px dashed #E7E4DC;
+      padding-top: 12px;
+    }
+
+    .digit-cell {
+      border: 1px solid #E7E4DC;
+      padding: 4px 8px;
+      text-align: center;
+      background: #F6F4EF;
+      border-radius: 4px;
+    }
+
+    .comparison-row {
+      display: flex;
+      align-items: baseline;
+      gap: 24px;
+      margin-top: 12px;
+      font-size: 32px;
+    }
+  </style>
+</head>
+<body>
+  <h1>HOSPITAL_UI_SPEC_V2 §2.1 Type Pairing Test</h1>
+
+  <!-- CANDIDATE A -->
+  <div class="test-box" id="candidate-a">
+    <div class="candidate-title">Candidate A: Instrument Sans (UI) + Instrument Serif (Display)</div>
+    
+    <div class="pair-a-display display-sample tnum" id="cand-a-display">
+      2u O− arrived · 15:58 · 12u O− · 0.0 d · 0 1 2 3 4 5 6 7 8 9
+    </div>
+
+    <div class="pair-a-ui ui-sample tnum" id="cand-a-ui">
+      2u O− arrived · 15:58 · 12u O− · 0.0 d · 0 1 2 3 4 5 6 7 8 9
+    </div>
+
+    <div class="comparison-row pair-a-ui tnum">
+      <div><strong>O vs 0 (UI):</strong> <span id="cand-a-ui-O" style="color:#C42B3C">O</span> (cap O) vs <span id="cand-a-ui-0" style="color:#1C8A68">0</span> (digit zero)</div>
+      <div><strong>O− (Group):</strong> <span style="font-weight:600">O−</span></div>
+    </div>
+
+    <div class="digit-grid pair-a-ui tnum" id="cand-a-digits">
+      <div class="digit-cell" id="cand-a-d0">0</div>
+      <div class="digit-cell" id="cand-a-d1">1</div>
+      <div class="digit-cell" id="cand-a-d2">2</div>
+      <div class="digit-cell" id="cand-a-d3">3</div>
+      <div class="digit-cell" id="cand-a-d4">4</div>
+      <div class="digit-cell" id="cand-a-d5">5</div>
+      <div class="digit-cell" id="cand-a-d6">6</div>
+      <div class="digit-cell" id="cand-a-d7">7</div>
+      <div class="digit-cell" id="cand-a-d8">8</div>
+      <div class="digit-cell" id="cand-a-d9">9</div>
+    </div>
+  </div>
+
+  <!-- CANDIDATE B -->
+  <div class="test-box" id="candidate-b">
+    <div class="candidate-title">Candidate B: Hanken Grotesk (UI) + Fraunces (Display)</div>
+    
+    <div class="pair-b-display display-sample tnum" id="cand-b-display">
+      2u O− arrived · 15:58 · 12u O− · 0.0 d · 0 1 2 3 4 5 6 7 8 9
+    </div>
+
+    <div class="pair-b-ui ui-sample tnum" id="cand-b-ui">
+      2u O− arrived · 15:58 · 12u O− · 0.0 d · 0 1 2 3 4 5 6 7 8 9
+    </div>
+
+    <div class="comparison-row pair-b-ui tnum">
+      <div><strong>O vs 0 (UI):</strong> <span id="cand-b-ui-O" style="color:#C42B3C">O</span> (cap O) vs <span id="cand-b-ui-0" style="color:#1C8A68">0</span> (digit zero)</div>
+      <div><strong>O− (Group):</strong> <span style="font-weight:600">O−</span></div>
+    </div>
+
+    <div class="digit-grid pair-b-ui tnum" id="cand-b-digits">
+      <div class="digit-cell" id="cand-b-d0">0</div>
+      <div class="digit-cell" id="cand-b-d1">1</div>
+      <div class="digit-cell" id="cand-b-d2">2</div>
+      <div class="digit-cell" id="cand-b-d3">3</div>
+      <div class="digit-cell" id="cand-b-d4">4</div>
+      <div class="digit-cell" id="cand-b-d5">5</div>
+      <div class="digit-cell" id="cand-b-d6">6</div>
+      <div class="digit-cell" id="cand-b-d7">7</div>
+      <div class="digit-cell" id="cand-b-d8">8</div>
+      <div class="digit-cell" id="cand-b-d9">9</div>
+    </div>
+  </div>
+</body>
+</html>
+

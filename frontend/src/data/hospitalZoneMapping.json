@@ -1,0 +1,227 @@
+{
+  "AIM": {
+    "code": "AIM",
+    "id": "ND-01",
+    "name": "AIIMS Trauma",
+    "fullName": "AIIMS Trauma & Dengue Center",
+    "zone": "South Delhi",
+    "district": "South East",
+    "method": "point-in-polygon"
+  },
+  "SFD": {
+    "code": "SFD",
+    "id": "ND-02",
+    "name": "Safdarjung",
+    "fullName": "Safdarjung Super Specialty",
+    "zone": "South Delhi",
+    "district": "South",
+    "method": "point-in-polygon"
+  },
+  "MAX": {
+    "code": "MAX",
+    "id": "ND-03",
+    "name": "Max Saket",
+    "fullName": "Max Super Specialty Saket",
+    "zone": "South Delhi",
+    "district": "South",
+    "method": "point-in-polygon"
+  },
+  "N62": {
+    "code": "N62",
+    "id": "ND-04",
+    "name": "Fortis Noida",
+    "fullName": "Fortis Hospital Sec-62 Noida",
+    "zone": "East Delhi",
+    "district": "East",
+    "method": "point-in-polygon"
+  },
+  "MDT": {
+    "code": "MDT",
+    "id": "ND-05",
+    "name": "Medanta Hub",
+    "fullName": "Medanta The Medicity Hub",
+    "zone": "Central Delhi",
+    "district": "New Delhi",
+    "method": "point-in-polygon"
+  },
+  "FTN": {
+    "code": "FTN",
+    "id": "ND-06",
+    "name": "Fortis Okhla",
+    "fullName": "Fortis Escorts Heart Okhla",
+    "zone": "South Delhi",
+    "district": "South East",
+    "method": "point-in-polygon"
+  },
+  "GTB": {
+    "code": "GTB",
+    "id": "ND-07",
+    "name": "GTB East Delhi",
+    "fullName": "GTB Hospital Dilshad Garden",
+    "zone": "East Delhi",
+    "district": "East",
+    "method": "point-in-polygon"
+  },
+  "RML": {
+    "code": "RML",
+    "id": "ND-08",
+    "name": "RML Central",
+    "fullName": "Dr. RML Hospital Connaught",
+    "zone": "Central Delhi",
+    "district": "New Delhi",
+    "method": "point-in-polygon"
+  },
+  "LNJ": {
+    "code": "LNJ",
+    "id": "ND-09",
+    "name": "Lok Nayak",
+    "fullName": "Lok Nayak Jai Prakash (LNJP)",
+    "zone": "Central Delhi",
+    "district": "Central",
+    "method": "point-in-polygon"
+  },
+  "SGR": {
+    "code": "SGR",
+    "id": "ND-10",
+    "name": "Sir Ganga Ram",
+    "fullName": "Sir Ganga Ram Hospital",
+    "zone": "Central Delhi",
+    "district": "New Delhi",
+    "method": "point-in-polygon"
+  },
+  "APL": {
+    "code": "APL",
+    "id": "ND-11",
+    "name": "Apollo Sarita",
+    "fullName": "Indraprastha Apollo Hospital",
+    "zone": "South Delhi",
+    "district": "South East",
+    "method": "point-in-polygon"
+  },
+  "RGV": {
+    "code": "RGV",
+    "id": "ND-12",
+    "name": "Rajiv Gandhi",
+    "fullName": "Rajiv Gandhi Super Specialty",
+    "zone": "Ghaziabad",
+    "district": "Ghaziabad",
+    "method": "point-in-polygon"
+  },
+  "FSB": {
+    "code": "FSB",
+    "id": "ND-13",
+    "name": "Fortis Vasant",
+    "fullName": "Fortis Flt Lt Rajan Dhall",
+    "zone": "Central Delhi",
+    "district": "New Delhi",
+    "method": "point-in-polygon"
+  },
+  "BLK": {
+    "code": "BLK",
+    "id": "ND-14",
+    "name": "BLK-Max Pusa",
+    "fullName": "BLK-Max Super Specialty",
+    "zone": "Central Delhi",
+    "district": "New Delhi",
+    "method": "point-in-polygon"
+  },
+  "MPD": {
+    "code": "MPD",
+    "id": "ND-15",
+    "name": "Manipal Dwarka",
+    "fullName": "Manipal Hospital Dwarka",
+    "zone": "Central Delhi",
+    "district": "New Delhi",
+    "method": "point-in-polygon"
+  },
+  "STP": {
+    "code": "STP",
+    "id": "ND-16",
+    "name": "St. Stephens",
+    "fullName": "St. Stephen's Hospital Tis Hazari",
+    "zone": "Central Delhi",
+    "district": "Central",
+    "method": "point-in-polygon"
+  },
+  "ROH": {
+    "code": "ROH",
+    "id": "ND-17",
+    "name": "Saroj Rohini",
+    "fullName": "Saroj Super Specialty Rohini",
+    "zone": "West Delhi",
+    "district": "West",
+    "method": "point-in-polygon"
+  },
+  "DWK": {
+    "code": "DWK",
+    "id": "ND-18",
+    "name": "Venkateshwar",
+    "fullName": "Venkateshwar Hospital Dwarka",
+    "zone": "Central Delhi",
+    "district": "New Delhi",
+    "method": "point-in-polygon"
+  },
+  "GCH": {
+    "code": "GCH",
+    "id": "ND-19",
+    "name": "Paras Gurugram",
+    "fullName": "Paras Health Sector 43",
+    "zone": "Central Delhi",
+    "district": "New Delhi",
+    "method": "point-in-polygon"
+  },
+  "NBV": {
+    "code": "NBV",
+    "id": "ND-20",
+    "name": "Jaypee Noida",
+    "fullName": "Jaypee Hospital Sec-128",
+    "zone": "Noida",
+    "district": "Gautam Buddha Nagar",
+    "method": "point-in-polygon"
+  },
+  "DRB": {
+    "code": "DRB",
+    "id": "ND-21",
+    "name": "DDU Hospital",
+    "fullName": "Deen Dayal Upadhyay Hospital",
+    "zone": "Central Delhi",
+    "district": "New Delhi",
+    "method": "point-in-polygon"
+  },
+  "SDP": {
+    "code": "SDP",
+    "id": "ND-22",
+    "name": "Sanjay Gandhi",
+    "fullName": "Sanjay Gandhi Memorial Hospital",
+    "zone": "West Delhi",
+    "district": "West",
+    "method": "point-in-polygon"
+  },
+  "NH4": {
+    "code": "NH4",
+    "id": "ND-23",
+    "name": "Artemis Hub",
+    "fullName": "Artemis Hospital Sector 51",
+    "zone": "Central Delhi",
+    "district": "New Delhi",
+    "method": "point-in-polygon"
+  },
+  "MXP": {
+    "code": "MXP",
+    "id": "ND-24",
+    "name": "Max Patparganj",
+    "fullName": "Max Super Specialty Patparganj",
+    "zone": "East Delhi",
+    "district": "East",
+    "method": "point-in-polygon"
+  },
+  "PRS": {
+    "code": "PRS",
+    "id": "ND-25",
+    "name": "Holy Family",
+    "fullName": "Holy Family Hospital Okhla",
+    "zone": "South Delhi",
+    "district": "South East",
+    "method": "point-in-polygon"
+  }
+}

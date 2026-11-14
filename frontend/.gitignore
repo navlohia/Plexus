@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.vite/
+
+# API & Environment Secrets
+api/
+api
+*.key
+*api_key*
+*apikey*
+.env
+.env.local
+.env.*
+!.env.example
+
